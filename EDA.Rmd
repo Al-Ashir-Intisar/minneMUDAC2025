@@ -39,10 +39,18 @@ print(skim(data))
 ```{r}
 # merging the summary stats with data dictionary 
 data_dict_and_summary <- left_join(data_dictionary, raw_data_summary, by = join_by("Field Name" == "skim_variable"))
+```
 
 
+```{r}
+# library for writing/saving excel file
+library(openxlsx)
+```
+
+
+```{r}
 # saving the merged file for reference 
-
+write.xlsx(data_dict_and_summary, "~/MUDAC/minneMUDAC2025/Data/DataDictionaryAndSummary.xlsx")
 ```
 
 
