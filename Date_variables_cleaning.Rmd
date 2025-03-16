@@ -93,19 +93,66 @@ unique_big_acceptance_date <- date_variables_df %>%
   distinct(`Big ID`, .keep_all = TRUE)
   
 
-write.xlsx(unique_big_acceptance_date, "~/MUDAC/minneMUDAC2025/Data/unique_big_acceptance_date.xlsx")
+#write.xlsx(unique_big_acceptance_date, "~/MUDAC/minneMUDAC2025/Data/unique_big_acceptance_date.xlsx")
 ```
 
 
+```{r}
+data_big_acceptance_date_fixed <- left_join(data, unique_big_acceptance_date, by = join_by("Big ID"))
+```
+
+
+```{r}
+data_big_acceptance_date_fixed %>% 
+  filter(!is.na(`Big Acceptance Date.y`)) %>% 
+  summarise(count = n())
+
+sum(ifelse(is.na(data_big_acceptance_date_fixed[["Big Acceptance Date.x"]]) & 
+           is.na(data_big_acceptance_date_fixed[["Big Acceptance Date.y"]]), 
+           TRUE, 
+           data_big_acceptance_date_fixed[["Big Acceptance Date.x"]] == 
+           data_big_acceptance_date_fixed[["Big Acceptance Date.y"]]))
+
+  
+```
+
+**\textcolor{blue}{So all the bigs that do have acceptance dates does have acceptance date in the main dataset. no need to fill missing values from the existing values.}**
+
+
+```{r}
+# checking how many rows actually have no missing values. 
+data %>% 
+  na.omit()
+```
+
+***\textcolor{blue}{Since all rows hae at leat one na value we must fill out the missing values with some kind of values.}**
 
 
 
+```{r}
+# getting rid of Big Acceptance date column
+data <- data %>% 
+  select(!c("Big Acceptance Date"))
+```
 
 
+```{r}
+# checking the unique Big and non missing date assesment uploaded 
+count_big_assesment_uploaded_date <- data %>% 
+  filter(!is.na(`Big Assessment Uploaded`)) %>% 
+  summarise(count = n())
+print(count_big_assesment_uploaded_date)
+```
 
 
+```{r}
+unique_big_assesment_uploaded_date <- data %>% 
+  select("Big ID", "Big Assessment Uploaded") %>% 
+  filter(!is.na(`Big Assessment Uploaded`)) %>% 
+  distinct(`Big ID`, .keep_all = TRUE)
 
-
+#write.xlsx(unique_big_assesment_uploaded_date, "~/MUDAC/minneMUDAC2025/Data/unique_big_assesment_uploaded_date.xlsx")
+```
 
 
 
