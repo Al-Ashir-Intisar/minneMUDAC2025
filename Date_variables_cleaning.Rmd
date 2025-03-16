@@ -1,0 +1,117 @@
+---
+title: "EDA MinneMUDAC"
+author: "Al Ashir Intisar"
+date: "2025-03-13"
+output:
+  pdf_document: default
+  html_document: default
+editor_options:
+  chunk_output_type: console
+---
+
+
+```{r}
+# to read in .xlsx files
+library(readxl)
+library(tidyverse)
+# library for dataset summary functions
+library(skimr)
+#libarary for join functions
+library(dplyr)
+# library for writing/saving excel file
+library(openxlsx)
+# ggplot library for plots
+library(ggplot2)
+```
+
+
+
+```{r, warning=FALSE}
+# reading in the training data
+data <- read_excel("~/MUDAC/minneMUDAC2025/Data/Training.xlsx")
+
+```
+
+
+
+```{r}
+# filtering in only date related variables. 
+date_variables_df <- data %>% 
+  select("Big ID", "Little ID", "Match ID 18Char", "Big Acceptance Date", "Big Approved Date", "Big Days Acceptance to Match", "Big Days Interview to Acceptance", "Big Days Interview to Match", "Big Enrollment: Created Date", "Completion Date", "Little Acceptance Date", "Little Application Received", "Little Birthdate", "Little Interview Date", "Little RTBM Date in MF", "Little RTBM in Matchforce", "Match Activation Date", "Match Closure Meeting Date", "Big Re-Enroll")
+
+```
+
+
+```{r}
+# checking how many rows have big acceptance date in it
+count_big_acceptance_date <- date_variables_df %>% 
+  filter(!is.na(`Big Acceptance Date`)) %>% 
+  summarise(count = n())
+print(count_big_acceptance_date)
+```
+
+
+```{r}
+# Checking unique big ID to see how many unique bigs are there in the dataset
+count_big_id_unique <- date_variables_df %>% 
+  distinct(`Big ID`) %>% 
+  summarise(count = n())
+print(count_big_id_unique)
+```
+
+
+```{r}
+# Checking how many unique  Big ID has acceptance date
+count_big_unique_acceptance_date <- date_variables_df %>% 
+  filter(!is.na(`Big Acceptance Date`)) %>% 
+  distinct(`Big ID`, .keep_all = TRUE) %>%
+  summarise(count = n())
+
+print(count_big_unique_acceptance_date)
+```
+
+
+
+```{r}
+# Checking how many unique BIG re-enrolled
+unique_big_re_enroll <-date_variables_df %>% 
+  select("Big Re-Enroll", "Big ID") %>% 
+  filter(!is.na(`Big Re-Enroll`)) %>%
+  distinct(`Big ID`, .keep_all = TRUE) %>% 
+  group_by(`Big Re-Enroll`) %>% 
+  summarise(count = n())
+
+print(unique_big_re_enroll)
+```
+
+
+
+```{r}
+unique_big_acceptance_date <- date_variables_df %>% 
+  select("Big ID", "Big Acceptance Date") %>% 
+  filter(!is.na(`Big Acceptance Date`)) %>% 
+  distinct(`Big ID`, .keep_all = TRUE)
+  
+
+write.xlsx(unique_big_acceptance_date, "~/MUDAC/minneMUDAC2025/Data/unique_big_acceptance_date.xlsx")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

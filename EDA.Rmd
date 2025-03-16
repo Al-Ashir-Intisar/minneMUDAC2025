@@ -27,6 +27,8 @@ data_dictionary <- read_excel("~/MUDAC/minneMUDAC2025/Data/DataDictionary.xlsx")
 ```{r}
 # library for dataset summary functions
 library(skimr)
+#libarary for join functions
+library(dplyr)
 ```
 
 
@@ -50,7 +52,7 @@ library(openxlsx)
 
 ```{r}
 # saving the merged file for reference 
-write.xlsx(data_dict_and_summary, "~/MUDAC/minneMUDAC2025/Data/DataDictionaryAndSummary.xlsx")
+#write.xlsx(data_dict_and_summary, "~/MUDAC/minneMUDAC2025/Data/DataDictionaryAndSummary.xlsx")
 ```
 
 
@@ -77,5 +79,52 @@ data %>%
 ```{r}
 # histogram of "Big Age"
 hist(data$`Big Age`, main = "Histogram of Big Age", col = "skyblue")
+```
+
+
+```{r}
+data$`Big Gender` %>% 
+  summarise()
+```
+
+
+
+```{r}
+library(tidyverse)
+```
+
+
+
+```{r}
+# need to 
+data %>% 
+  select("Little Other Interests", "Little ID") %>% 
+  drop_na() %>% 
+  distinct() 
+```
+
+
+```{r}
+data %>% 
+  select("Big Contact: Interest Finder - Entertainment", "Little ID") %>% 
+  drop_na() %>% 
+  distinct() 
+```
+
+
+```{r}
+# distribution of match length
+data %>% 
+  select(`Match Length`, `Match ID 18Char`) %>% 
+  distinct() %>%  # `unique()` works, but `distinct()` is preferred in dplyr
+  ggplot(aes(x = `Match Length`)) + 
+  geom_histogram(bins = 20, fill = "skyblue", color = "black") +
+  theme_minimal() +
+  labs(title = "Histogram of Match Length", x = "Match Length", y = "Count")
+```
+
+
+```{r}
+
 ```
 
