@@ -146,7 +146,7 @@ print(count_big_assesment_uploaded_date)
 
 
 ```{r}
-# seperating the unique bigs with non missing assesment uploded date. 
+# separating the unique bigs with non missing assesment uploded date. 
 unique_big_assesment_uploaded_date <- data %>% 
   select("Big ID", "Big Assessment Uploaded") %>% 
   filter(!is.na(`Big Assessment Uploaded`)) %>% 
@@ -157,6 +157,7 @@ unique_big_assesment_uploaded_date <- data %>%
 
 
 ```{r}
+# getting rid of the big assesment uploaded date column
 data <- data %>% 
   select(!c("Big Assessment Uploaded"))
 ```
@@ -172,7 +173,7 @@ print(count_big_contact_created_date)
 
 
 ```{r}
-# seperating the unique bigs with non missing contact created date. 
+# separating the unique bigs with non missing contact created date. 
 unique_big_contact_created_date <- data %>% 
   select("Big ID", "Big Contact: Created Date") %>% 
   filter(!is.na(`Big Contact: Created Date`)) %>% 
@@ -186,9 +187,27 @@ unique_big_contact_created_date <- data %>%
 ```{r}
 # creating a variable for gig contact creatd to match in days. 
 
+data <- data %>%
+  mutate("Big Days Contact Created to Match" = as.numeric(difftime(`Match Activation Date`, `Big Contact: Created Date`, units = "days")))
 
 ```
 
 
+```{r}
+# And getting rid of Big contact created column
+data <- data %>% 
+  select(!c("Big Contact: Created Date"))
+```
+
+
+```{r}
+# separating the unique mathc and bigs with non missing contact created to match activation date. 
+unique_big_days_contact_created_to_match_date <- data %>% 
+  select("Big ID", "Match ID 18Char", "Big Days Contact Created to Match") %>% 
+  filter(!is.na(`Big Days Contact Created to Match`)) %>% 
+  distinct(`Big ID`, `Match ID 18Char`, .keep_all = TRUE)
+
+write.xlsx(unique_big_days_contact_created_to_match_date, "~/MUDAC/minneMUDAC2025/Data/unique_big_days_contact_created_to_match_date.xlsx")
+```
 
 
