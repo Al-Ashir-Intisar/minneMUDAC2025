@@ -146,6 +146,7 @@ print(count_big_assesment_uploaded_date)
 
 
 ```{r}
+# seperating the unique bigs with non missing assesment uploded date. 
 unique_big_assesment_uploaded_date <- data %>% 
   select("Big ID", "Big Assessment Uploaded") %>% 
   filter(!is.na(`Big Assessment Uploaded`)) %>% 
@@ -155,9 +156,38 @@ unique_big_assesment_uploaded_date <- data %>%
 ```
 
 
+```{r}
+data <- data %>% 
+  select(!c("Big Assessment Uploaded"))
+```
+
+
+```{r}
+# checking the unique Big and non missing date assesment uploaded 
+count_big_contact_created_date <- data %>% 
+  filter(!is.na(`Big Contact: Created Date`)) %>% 
+  summarise(count = n())
+print(count_big_contact_created_date)
+```
+
+
+```{r}
+# seperating the unique bigs with non missing contact created date. 
+unique_big_contact_created_date <- data %>% 
+  select("Big ID", "Big Contact: Created Date") %>% 
+  filter(!is.na(`Big Contact: Created Date`)) %>% 
+  distinct(`Big ID`, .keep_all = TRUE)
+
+#write.xlsx(unique_big_contact_created_date, "~/MUDAC/minneMUDAC2025/Data/unique_big_contact_created_date.xlsx")
+```
 
 
 
+```{r}
+# creating a variable for gig contact creatd to match in days. 
+
+
+```
 
 
 
