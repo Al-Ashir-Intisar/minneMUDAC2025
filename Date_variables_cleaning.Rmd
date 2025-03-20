@@ -367,4 +367,40 @@ unique_little_days_application_recieved_to_match_activation <- data %>%
 ```
 
 
+```{r}
+# creating new variable for match activation date to completion in days
+data <- data %>%
+  mutate("Little Days Interview to Match Activation Date" = as.numeric(difftime(`Little Interview Date`, `Match Activation Date`, units = "days")))
+```
+
+
+
+```{r}
+unique_little_days_interview_to_match_activation <- data %>% 
+  select("Big ID", "Match ID 18Char", "Little Days Interview to Match Activation Date") %>% 
+  filter(!is.na(`Little Days Interview to Match Activation Date`)) %>% 
+  distinct(`Big ID`, `Match ID 18Char`, .keep_all = TRUE)
+
+
+write.xlsx(unique_little_days_interview_to_match_activation, "~/MUDAC/minneMUDAC2025/Data/unique_little_days_interview_to_match_activation.xlsx")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
