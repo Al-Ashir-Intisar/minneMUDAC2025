@@ -321,11 +321,11 @@ data <- data %>%
 
 ```{r}
 days_match_activation_to_note_completion <- data %>% 
-  select("Big ID", "Match ID 18Char", "Days Match Activation to Completion") %>% 
+  select("Completion Date", "Match ID 18Char", "Days Match Activation to Completion") %>% 
   filter(!is.na(`Days Match Activation to Completion`))
 
 
-#write.xlsx(days_match_activation_to_note_completion, "~/MUDAC/minneMUDAC2025/Data/days_match_activation_to_note_completion.xlsx")
+write.xlsx(days_match_activation_to_note_completion, "~/MUDAC/minneMUDAC2025/Data/days_match_activation_to_note_completion.xlsx")
 ```
 
 
@@ -421,10 +421,50 @@ unique_match_activation_date <- data %>%
 
 
 
+```{r}
+data <- data %>%
+  mutate("Days Match Activation to Closure Meeting Date" = as.numeric(difftime(`Match Closure Meeting Date`, `Match Activation Date`, units = "days")))
+```
+
+
+```{r}
+unique_days_match_activation_to_closure_date <- data %>% 
+  select("Match ID 18Char", "Days Match Activation to Closure Meeting Date") %>% 
+  filter(!is.na(`Days Match Activation to Closure Meeting Date`)) %>% 
+  distinct(`Match ID 18Char`, .keep_all = TRUE)
+
+
+write.xlsx(unique_days_match_activation_to_closure_date, "~/MUDAC/minneMUDAC2025/Data/unique_days_match_activation_to_closure_date.xlsx")
+```
 
 
 
+```{r}
+cleaned_date_data <- data %>% 
+  select(!c(`Match Closure Meeting Date`, `Little Interview Date`, `Little RTBM in Matchforce`, `Little RTBM Date in MF`, `Little Moved to RTBM in MF`, `Little Interview Date`, `Little Application Received`, `Little Acceptance Date`)) %>% 
+  select(`Match ID 18Char`, `Completion Date`, `Match Support Contact Notes`, `Little ID`, `Big ID`, `Match Activation Date`, `Big Days Acceptance to Match`, `Big Days Interview to Acceptance`, `Big Days Interview to Match`)
+```
 
+```{r}
+# reordering the columns 
+cleaned_date_data <- cleaned_date_data %>% 
+  relocate(6, .before = 3) %>% 
+  relocate(5, .before = 2) %>% 
+  relocate(6, .before = 3)
+
+  
+```
+
+
+```{r}
+merging_data1 <- days_match_activation_to_note_completion %>% 
+  select(!c(`Big ID`)) %>% 
+  filter(!is.na(`Days Match Activation to Completion`))
+# merging the match activatio to note complation days variable
+
+cleaned_date_data %>% 
+  left_join()
+```
 
 
 
