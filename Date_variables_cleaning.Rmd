@@ -281,13 +281,30 @@ unique_big_days_acceptance_to_match_date <- data %>%
   distinct(`Big ID`, `Match ID 18Char`, .keep_all = TRUE)
 
 
-write.xlsx(unique_big_days_acceptance_to_match_date, "~/MUDAC/minneMUDAC2025/Data/unique_big_days_acceptance_to_match_date.xlsx")
+#write.xlsx(unique_big_days_acceptance_to_match_date, "~/MUDAC/minneMUDAC2025/Data/unique_big_days_acceptance_to_match_date.xlsx")
 ```
 
 
 
 ```{r}
+unique_big_days_interview_to_acceptance_date <- data %>% 
+  select("Big ID", "Match ID 18Char", "Big Days Interview to Acceptance") %>% 
+  filter(!is.na(`Big Days Interview to Acceptance`)) %>% 
+  distinct(`Big ID`, `Match ID 18Char`, .keep_all = TRUE)
 
+
+#write.xlsx(unique_big_days_interview_to_acceptance_date, "~/MUDAC/minneMUDAC2025/Data/unique_big_days_interview_to_acceptance_date.xlsx")
+```
+
+
+```{r}
+unique_big_days_interview_to_match_date <- data %>% 
+  select("Big ID", "Match ID 18Char", "Big Days Interview to Match") %>% 
+  filter(!is.na(`Big Days Interview to Match`)) %>% 
+  distinct(`Big ID`, `Match ID 18Char`, .keep_all = TRUE)
+
+
+#write.xlsx(unique_big_days_interview_to_match_date, "~/MUDAC/minneMUDAC2025/Data/unique_big_days_interview_to_match_date.xlsx")
 ```
 
 
