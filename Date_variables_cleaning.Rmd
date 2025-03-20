@@ -308,6 +308,46 @@ unique_big_days_interview_to_match_date <- data %>%
 ```
 
 
+```{r}
+# creating new variable for match activation date to completion in days
+data <- data %>%
+  mutate("Days Match Activation to Completion" = as.numeric(difftime(`Completion Date`, `Match Activation Date`, units = "days")))
+
+
+#data$`Days Match Activation to Completion`
+```
+
+
+
+```{r}
+days_match_activation_to_note_completion <- data %>% 
+  select("Big ID", "Match ID 18Char", "Days Match Activation to Completion") %>% 
+  filter(!is.na(`Days Match Activation to Completion`))
+
+
+#write.xlsx(days_match_activation_to_note_completion, "~/MUDAC/minneMUDAC2025/Data/days_match_activation_to_note_completion.xlsx")
+```
+
+
+```{r}
+# creating new variable for match activation date to completion in days
+data <- data %>%
+  mutate("Little Days Acceptance to Match Activation Date" = as.numeric(difftime(`Little Acceptance Date`, `Match Activation Date`, units = "days")))
+
+```
+
+
+```{r}
+unique_little_days_acceptance_to_match_activation <- data %>% 
+  select("Big ID", "Match ID 18Char", "Little Days Acceptance to Match Activation Date") %>% 
+  filter(!is.na(`Little Days Acceptance to Match Activation Date`)) %>% 
+  distinct(`Big ID`, `Match ID 18Char`, .keep_all = TRUE)
+
+
+write.xlsx(unique_little_days_acceptance_to_match_activation, "~/MUDAC/minneMUDAC2025/Data/unique_little_days_acceptance_to_match_activation.xlsx")
+```
+
+
 
 
 
