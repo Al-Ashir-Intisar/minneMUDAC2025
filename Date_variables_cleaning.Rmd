@@ -325,7 +325,7 @@ days_match_activation_to_note_completion <- data %>%
   filter(!is.na(`Days Match Activation to Completion`))
 
 
-write.xlsx(days_match_activation_to_note_completion, "~/MUDAC/minneMUDAC2025/Data/days_match_activation_to_note_completion.xlsx")
+#write.xlsx(days_match_activation_to_note_completion, "~/MUDAC/minneMUDAC2025/Data/days_match_activation_to_note_completion.xlsx")
 ```
 
 
@@ -434,7 +434,7 @@ unique_days_match_activation_to_closure_date <- data %>%
   distinct(`Match ID 18Char`, .keep_all = TRUE)
 
 
-write.xlsx(unique_days_match_activation_to_closure_date, "~/MUDAC/minneMUDAC2025/Data/unique_days_match_activation_to_closure_date.xlsx")
+#write.xlsx(unique_days_match_activation_to_closure_date, "~/MUDAC/minneMUDAC2025/Data/unique_days_match_activation_to_closure_date.xlsx")
 ```
 
 
@@ -457,16 +457,23 @@ cleaned_date_data <- cleaned_date_data %>%
 
 
 ```{r}
-merging_data1 <- days_match_activation_to_note_completion %>% 
-  select(!c(`Big ID`)) %>% 
-  filter(!is.na(`Days Match Activation to Completion`))
-# merging the match activatio to note complation days variable
+# Adding the match activation to completion in days variable
 
-cleaned_date_data %>% 
-  left_join()
+cleaned_date_data <- cleaned_date_data %>% 
+    mutate("Days Match Activation to Note Completion" = as.numeric(difftime(`Completion Date`, `Match Activation Date`, units = "days")))
+  
+
+```
+
+```{r}
+cleaned_date_data <- merge_test
 ```
 
 
+```{r}
+# merging the big acceptange to match activation in days variable
+merge_test <- left_join(cleaned_date_data, unique_big_days_approved_to_match_date, by = join_by(`Match ID 18Char`, `Big ID`))
+```
 
 
 
