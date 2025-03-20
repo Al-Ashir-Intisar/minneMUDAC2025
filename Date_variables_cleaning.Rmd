@@ -382,12 +382,42 @@ unique_little_days_interview_to_match_activation <- data %>%
   distinct(`Big ID`, `Match ID 18Char`, .keep_all = TRUE)
 
 
-write.xlsx(unique_little_days_interview_to_match_activation, "~/MUDAC/minneMUDAC2025/Data/unique_little_days_interview_to_match_activation.xlsx")
+#write.xlsx(unique_little_days_interview_to_match_activation, "~/MUDAC/minneMUDAC2025/Data/unique_little_days_interview_to_match_activation.xlsx")
+```
+
+```{r}
+data %>% 
+  select(`Little Moved to RTBM in MF`) %>% 
+  filter(!is.na(`Little Moved to RTBM in MF`)) %>% 
+  head()
 ```
 
 
 
+```{r}
+data %>% 
+  select(`Little RTBM Date in MF`) %>% 
+  filter(!is.na(`Little RTBM Date in MF`)) %>% 
+  head()
+```
 
+
+```{r}
+data %>% 
+  select(`Little RTBM in Matchforce`) %>% 
+  filter(!is.na(`Little RTBM in Matchforce`)) %>% 
+  arrange(desc(`Little RTBM in Matchforce`) ) %>% 
+  head()
+```
+
+```{r}
+unique_match_activation_date <- data %>% 
+  select("Match ID 18Char", "Match Activation Date") %>% 
+  filter(!is.na(`Match Activation Date`)) %>% 
+  distinct(`Match ID 18Char`, .keep_all = TRUE)
+
+#write.xlsx(unique_match_activation_date, "~/MUDAC/minneMUDAC2025/Data/unique_match_activation_date.xlsx")
+```
 
 
 
