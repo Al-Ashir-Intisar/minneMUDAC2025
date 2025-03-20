@@ -340,35 +340,35 @@ days_match_activation_to_note_completion <- data %>%
 ```{r}
 # creating new variable for match activation date to completion in days
 data <- data %>%
-  mutate("Little Days Acceptance to Match Activation Date" = as.numeric(difftime(`Match Activation Date`,`Little Acceptance Date`, units = "days")))
+  mutate("Days Little Acceptance to Match Activation Date" = as.numeric(difftime(`Match Activation Date`,`Little Acceptance Date`, units = "days")))
 
 ```
 
 
 ```{r}
 unique_little_days_acceptance_to_match_activation <- data %>% 
-  select("Little ID", "Match ID 18Char", "Little Days Acceptance to Match Activation Date") %>% 
-  filter(!is.na(`Little Days Acceptance to Match Activation Date`)) %>% 
+  select("Little ID", "Match ID 18Char", "Days Little Acceptance to Match Activation Date") %>% 
+  filter(!is.na(`Days Little Acceptance to Match Activation Date`)) %>% 
   distinct(`Little ID`, `Match ID 18Char`, .keep_all = TRUE)
 
 
-write.xlsx(unique_little_days_acceptance_to_match_activation, "~/MUDAC/minneMUDAC2025/Data/unique_little_days_acceptance_to_match_activation.xlsx")
+#write.xlsx(unique_little_days_acceptance_to_match_activation, "~/MUDAC/minneMUDAC2025/Data/unique_little_days_acceptance_to_match_activation.xlsx")
 ```
 
 
 ```{r}
 # creating new variable for match activation date to completion in days
 data <- data %>%
-  mutate("Little Days Application Recieved to Match Activation Date" = as.numeric(difftime(`Little Application Received`, `Match Activation Date`, units = "days")))
+  mutate("Days Little Application Recieved to Match Activation Date" = as.numeric(difftime(`Match Activation Date`,`Little Application Received`, units = "days")))
 ```
 
 
 
 ```{r}
 unique_little_days_application_recieved_to_match_activation <- data %>% 
-  select("Big ID", "Match ID 18Char", "Little Days Application Recieved to Match Activation Date") %>% 
-  filter(!is.na(`Little Days Application Recieved to Match Activation Date`)) %>% 
-  distinct(`Big ID`, `Match ID 18Char`, .keep_all = TRUE)
+  select("Little ID", "Match ID 18Char", "Days Little Application Recieved to Match Activation Date") %>% 
+  filter(!is.na(`Days Little Application Recieved to Match Activation Date`)) %>% 
+  distinct(`Little ID`, `Match ID 18Char`, .keep_all = TRUE)
 
 
 #write.xlsx(unique_little_days_application_recieved_to_match_activation, "~/MUDAC/minneMUDAC2025/Data/unique_little_days_application_recieved_to_match_activation.xlsx")
@@ -378,16 +378,16 @@ unique_little_days_application_recieved_to_match_activation <- data %>%
 ```{r}
 # creating new variable for match activation date to completion in days
 data <- data %>%
-  mutate("Little Days Interview to Match Activation Date" = as.numeric(difftime(`Little Interview Date`, `Match Activation Date`, units = "days")))
+  mutate("Days Little Interview to Match Activation Date" = as.numeric(difftime(`Match Activation Date`, `Little Interview Date`, units = "days")))
 ```
 
 
 
 ```{r}
 unique_little_days_interview_to_match_activation <- data %>% 
-  select("Big ID", "Match ID 18Char", "Little Days Interview to Match Activation Date") %>% 
-  filter(!is.na(`Little Days Interview to Match Activation Date`)) %>% 
-  distinct(`Big ID`, `Match ID 18Char`, .keep_all = TRUE)
+  select("Little ID", "Match ID 18Char", "Days Little Interview to Match Activation Date") %>% 
+  filter(!is.na(`Days Little Interview to Match Activation Date`)) %>% 
+  distinct(`Little ID`, `Match ID 18Char`, .keep_all = TRUE)
 
 
 #write.xlsx(unique_little_days_interview_to_match_activation, "~/MUDAC/minneMUDAC2025/Data/unique_little_days_interview_to_match_activation.xlsx")
@@ -528,9 +528,49 @@ cleaned_date_data <- merge_test
 
 ```{r}
 # merging the big acceptange to match activation in days variable
-merge_test <- left_join(cleaned_date_data, unique_little_days_acceptance_to_match_activation, by = join_by(`Match ID 18Char`, `Big ID`))
+merge_test <- left_join(cleaned_date_data, unique_little_days_acceptance_to_match_activation, by = join_by(`Match ID 18Char`, `Little ID`))
 ```
 
 ```{r}
 cleaned_date_data <- merge_test
 ```
+
+```{r}
+# merging the big acceptange to match activation in days variable
+merge_test <- left_join(cleaned_date_data, unique_little_days_application_recieved_to_match_activation, by = join_by(`Match ID 18Char`, `Little ID`))
+```
+
+```{r}
+cleaned_date_data <- merge_test
+```
+
+```{r}
+# merging the big acceptange to match activation in days variable
+merge_test <- left_join(cleaned_date_data, unique_little_days_interview_to_match_activation, by = join_by(`Match ID 18Char`, `Little ID`))
+```
+
+```{r}
+cleaned_date_data <- merge_test
+```
+
+
+```{r}
+
+```
+
+
+
+```{r}
+write.xlsx(cleaned_date_data, "~/MUDAC/minneMUDAC2025/Data/all_date_variables_cleaned_df.xlsx")
+```
+
+
+
+
+
+
+
+
+
+
+
