@@ -155,6 +155,16 @@ unique_big_assesment_uploaded_date <- data %>%
 #write.xlsx(unique_big_assesment_uploaded_date, "~/MUDAC/minneMUDAC2025/Data/unique_big_assesment_uploaded_date.xlsx")
 ```
 
+```{r}
+unique_big_days_assesment_uploaded_to_match_date <- data %>% 
+  select("Big ID", "Match ID 18Char", "Big Assessment Uploaded") %>% 
+  filter(!is.na(`Big Assessment Uploaded`)) %>% 
+  distinct(`Big ID`, `Match ID 18Char`, .keep_all = TRUE)
+
+
+#write.xlsx(unique_big_days_assesment_uploaded_to_match_date, "~/MUDAC/minneMUDAC2025/Data/unique_big_days_assesment_uploaded_to_match_date.xlsx")
+```
+
 
 ```{r}
 # getting rid of the big assesment uploaded date column
@@ -264,7 +274,21 @@ data <- data %>%
 
 
 
+```{r}
+unique_big_days_acceptance_to_match_date <- data %>% 
+  select("Big ID", "Match ID 18Char", "Big Days Acceptance to Match") %>% 
+  filter(!is.na(`Big Days Acceptance to Match`)) %>% 
+  distinct(`Big ID`, `Match ID 18Char`, .keep_all = TRUE)
 
+
+write.xlsx(unique_big_days_acceptance_to_match_date, "~/MUDAC/minneMUDAC2025/Data/unique_big_days_acceptance_to_match_date.xlsx")
+```
+
+
+
+```{r}
+
+```
 
 
 
