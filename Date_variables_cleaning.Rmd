@@ -155,14 +155,22 @@ unique_big_assesment_uploaded_date <- data %>%
 #write.xlsx(unique_big_assesment_uploaded_date, "~/MUDAC/minneMUDAC2025/Data/unique_big_assesment_uploaded_date.xlsx")
 ```
 
+
+```{r}
+data <- data %>%
+  mutate("Days Big Assesment Uploaded to Match" = as.numeric(difftime(`Match Activation Date`, `Big Assessment Uploaded`, units = "days")))
+```
+
+
+
 ```{r}
 unique_big_days_assesment_uploaded_to_match_date <- data %>% 
-  select("Big ID", "Match ID 18Char", "Big Assessment Uploaded") %>% 
-  filter(!is.na(`Big Assessment Uploaded`)) %>% 
+  select("Big ID", "Match ID 18Char", "Days Big Assesment Uploaded to Match") %>% 
+  filter(!is.na(`Days Big Assesment Uploaded to Match`)) %>% 
   distinct(`Big ID`, `Match ID 18Char`, .keep_all = TRUE)
 
 
-#write.xlsx(unique_big_days_assesment_uploaded_to_match_date, "~/MUDAC/minneMUDAC2025/Data/unique_big_days_assesment_uploaded_to_match_date.xlsx")
+write.xlsx(unique_big_days_assesment_uploaded_to_match_date, "~/MUDAC/minneMUDAC2025/Data/unique_big_days_assesment_uploaded_to_match_date.xlsx")
 ```
 
 
@@ -332,19 +340,19 @@ days_match_activation_to_note_completion <- data %>%
 ```{r}
 # creating new variable for match activation date to completion in days
 data <- data %>%
-  mutate("Little Days Acceptance to Match Activation Date" = as.numeric(difftime(`Little Acceptance Date`, `Match Activation Date`, units = "days")))
+  mutate("Little Days Acceptance to Match Activation Date" = as.numeric(difftime(`Match Activation Date`,`Little Acceptance Date`, units = "days")))
 
 ```
 
 
 ```{r}
 unique_little_days_acceptance_to_match_activation <- data %>% 
-  select("Big ID", "Match ID 18Char", "Little Days Acceptance to Match Activation Date") %>% 
+  select("Little ID", "Match ID 18Char", "Little Days Acceptance to Match Activation Date") %>% 
   filter(!is.na(`Little Days Acceptance to Match Activation Date`)) %>% 
-  distinct(`Big ID`, `Match ID 18Char`, .keep_all = TRUE)
+  distinct(`Little ID`, `Match ID 18Char`, .keep_all = TRUE)
 
 
-#write.xlsx(unique_little_days_acceptance_to_match_activation, "~/MUDAC/minneMUDAC2025/Data/unique_little_days_acceptance_to_match_activation.xlsx")
+write.xlsx(unique_little_days_acceptance_to_match_activation, "~/MUDAC/minneMUDAC2025/Data/unique_little_days_acceptance_to_match_activation.xlsx")
 ```
 
 
@@ -465,10 +473,6 @@ cleaned_date_data <- cleaned_date_data %>%
 
 ```
 
-```{r}
-cleaned_date_data <- merge_test
-```
-
 
 ```{r}
 # merging the big acceptange to match activation in days variable
@@ -477,7 +481,56 @@ merge_test <- left_join(cleaned_date_data, unique_big_days_approved_to_match_dat
 
 
 
+```{r}
+cleaned_date_data <- merge_test
+```
 
 
+```{r}
+# merging the big acceptange to match activation in days variable
+merge_test <- left_join(cleaned_date_data, unique_big_days_assesment_uploaded_to_match_date, by = join_by(`Match ID 18Char`, `Big ID`))
+```
+
+```{r}
+cleaned_date_data <- merge_test
+```
 
 
+```{r}
+# merging the big acceptange to match activation in days variable
+merge_test <- left_join(cleaned_date_data, unique_big_days_contact_created_to_match_date, by = join_by(`Match ID 18Char`, `Big ID`))
+```
+
+```{r}
+cleaned_date_data <- merge_test
+```
+
+
+```{r}
+# merging the big acceptange to match activation in days variable
+merge_test <- left_join(cleaned_date_data, unique_big_days_enrollment_to_match_date, by = join_by(`Match ID 18Char`, `Big ID`))
+```
+
+```{r}
+cleaned_date_data <- merge_test
+```
+
+
+```{r}
+# merging the big acceptange to match activation in days variable
+merge_test <- left_join(cleaned_date_data, unique_days_match_activation_to_closure_date, by = join_by(`Match ID 18Char`))
+```
+
+```{r}
+cleaned_date_data <- merge_test
+```
+
+
+```{r}
+# merging the big acceptange to match activation in days variable
+merge_test <- left_join(cleaned_date_data, unique_little_days_acceptance_to_match_activation, by = join_by(`Match ID 18Char`, `Big ID`))
+```
+
+```{r}
+cleaned_date_data <- merge_test
+```
