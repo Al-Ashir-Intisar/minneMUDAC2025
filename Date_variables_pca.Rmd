@@ -1,6 +1,14 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
 
 ```{r}
 library(readxl)
+library(dplyr)
+library(tidyverse)
+library(factoextra)
 ```
 
 
@@ -10,6 +18,117 @@ clean_date_df <- read_excel("~/MUDAC/minneMUDAC2025/Data/all_date_variables_clea
 
 
 ```{r}
+dates_df_with_is_not_NA_binary_variables <- clean_date_df %>%
+  mutate(across(7:ncol(.), ~ ifelse(is.na(.), 0, 1), .names = "is_not_NA_{.col}"))
 
 ```
+
+
+
+```{r}
+clean_date_df %>% 
+  drop_na() %>% 
+  distinct(`Match ID 18Char`, .keep_all = TRUE)
+
+# So only about 53 m,athces that has all non NA values for the date variables. 
+```
+
+
+```{r}
+print(sum(clean_date_df$`Big Days Acceptance to Match` == 0, na.rm = TRUE))
+print(sum(clean_date_df$`Big Days Interview to Acceptance` == 0, na.rm = TRUE))
+print(sum(clean_date_df$`Big Days Interview to Match` == 0, na.rm = TRUE))
+print(sum(clean_date_df$`Days Match Activation to Note Completion` == 0, na.rm = TRUE))
+print(sum(clean_date_df$`Big Days Approved to Match` == 0, na.rm = TRUE))
+print(sum(clean_date_df$`Days Big Assesment Uploaded to Match` == 0, na.rm = TRUE))
+print(sum(clean_date_df$`Big Days Contact Created to Match` == 0, na.rm = TRUE))
+print(sum(clean_date_df$`Big Days Enrollment to Match` == 0, na.rm = TRUE))
+print(sum(clean_date_df$`Days Match Activation to Closure Meeting Date` == 0, na.rm = TRUE))
+print(sum(clean_date_df$`Days Little Acceptance to Match Activation Date` == 0, na.rm = TRUE))
+print(sum(clean_date_df$`Days Little Application Recieved to Match Activation Date` == 0, na.rm = TRUE))
+print(sum(clean_date_df$`Days Little Interview to Match Activation Date` == 0, na.rm = TRUE))
+
+
+```
+
+```{r}
+df_for_pca_with_is_not_NA_variables <- clean_date_df %>%
+  select(7:ncol(clean_date_df)) %>% 
+  mutate(across(everything(), ~ ifelse(is.na(.), 0, 1), .names = "is_not_NA_{.col}")) %>% 
+  select(13:24)
+
+# View the first few rows to verify
+head(df_for_pca_with_is_not_NA_variables)
+```
+
+
+```{r}
+pca_with_is_NA_variables <- prcomp(df_for_pca_with_is_not_NA_variables)
+
+fviz_pca_biplot(pca_with_is_NA_variables)
+
+# plotting how much of the variation each pc explains
+fviz_screeplot(pca_with_is_NA_variables, addlabels = TRUE, ylim = c(0, 100))+
+labs(title = "Date is NA variables pca scree plot")
+```
+
+
+```{r}
+
+dates_df_with_is_not_NA_binary_variables_pca <- cbind(dates_df_with_is_not_NA_binary_variables, pca_with_is_NA_variables$x)
+
+# first 5 PC explains 100% of the variability
+
+
+```
+
+
+
+```{r}
+df_for_pca_with_0s_for_NAs <- clean_date_df[, 7:ncol(clean_date_df)] %>% 
+  mutate_all(~ replace(.,is.na(.), 0))
+
+```
+
+
+```{r}
+# conducting principal component analysis with 0s for NAs
+pca_with_0s_for_NAs <- prcomp(df_for_pca_with_0s_for_NAs, scale. = TRUE)
+
+fviz_pca_biplot(pca_with_0s_for_NAs)
+```
+
+```{r}
+# plotting how much of the variation each pc explains
+fviz_screeplot(pca_with_0s_for_NAs, addlabels = TRUE, ylim = c(0, 100))+
+labs(title = "Date variables pca with 0s for NAs scree plot")
+```
+
+
+```{r}
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
