@@ -9,6 +9,7 @@ library(readxl)
 library(dplyr)
 library(tidyverse)
 library(factoextra)
+library(openxlsx)
 ```
 
 
@@ -79,6 +80,14 @@ dates_df_with_is_not_NA_binary_variables_pca <- cbind(dates_df_with_is_not_NA_bi
 
 # first 5 PC explains 100% of the variability
 
+#write.xlsx(dates_df_with_is_not_NA_binary_variables_pca, "~/MUDAC/minneMUDAC2025/Data/dates_df_with_is_not_NA_binary_variables_pca.xlsx")
+```
+
+
+
+```{r}
+dates_df_with_0s_for_NAs <- clean_date_df %>%
+  mutate(across(7:ncol(.), ~ replace(., is.na(.), 0)))
 
 ```
 
@@ -106,7 +115,12 @@ labs(title = "Date variables pca with 0s for NAs scree plot")
 
 
 ```{r}
+dates_df_with_0s_for_NAs_pca <- cbind(dates_df_with_0s_for_NAs, pca_with_0s_for_NAs$x)
 
+# more than 85% of the variation is explained by the first 8 PCs
+
+
+#write.xlsx(dates_df_with_0s_for_NAs_pca, "~/MUDAC/minneMUDAC2025/Data/dates_df_with_0s_for_NAs_pca.xlsx")
 ```
 
 
