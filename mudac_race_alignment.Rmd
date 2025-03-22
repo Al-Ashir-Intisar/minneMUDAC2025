@@ -1,0 +1,44 @@
+---
+title: "mudac_race_alignment"
+author: "Fortress Okorie"
+output:
+  pdf_document: default
+  html_document: default
+editor_options:
+  chunk_output_type: console
+---
+
+```{r}
+#load necessary libraries 
+library(tidyverse)
+library(janitor) #for making column names syntactic
+
+#read in the csv file 
+mudac_data <- read_csv("~/Desktop/mudac/mudac_data.csv")
+
+#rename columns with syntactic names
+mudac_data <- mudac_data |>
+  rename_with(~ make_clean_names(.), everything())
+```
+
+
+```{r}
+mudac_race_clean <- mudac_data |>
+  select(match_id_18char, big_race_ethnicity, little_participant_race_ethnicity, match_length) |>
+  separate(big_race_ethnicity, into = c("big_race_1", "big_race_2", "big_race_3"), sep = ";", fill = "right") |>
+  separate(little_participant_race_ethnicity, into = c("little_race_1", "little_race_2", "little_race_3"), sep = ";", fill = "right") |>
+  mutate(across(everything(), as.character)) |>
+  rowwise() |>  # Ensures row-wise operation
+  mutate(
+    match_count = sum(c_across(starts_with("little_race")) %in% c_across(starts_with("big_race")), na.rm = TRUE),
+    alignment = case_when(
+      match_count == 3 ~ 1,           # All 3 little races match
+      match_count == 2 ~ 2 / 3,       # 2 little races match
+      match_count == 1 ~ 1 / 3,       # 1 little race matches
+      TRUE ~ 0                        # No match
+    )
+  ) |>
+  ungroup()
+```
+
+
