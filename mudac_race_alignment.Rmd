@@ -42,3 +42,78 @@ mudac_race_clean <- mudac_data |>
 ```
 
 
+```{r}
+# Write the cleaned data to a new CSV file
+write_csv(mudac_race_clean, "~/Desktop/mudac/mudac_race_clean.csv")
+```
+
+```{r}
+# Summary statistics for match_length by alignment
+alignment_summary <- mudac_race_clean |>
+  group_by(alignment) |>
+  summarise(
+    mean_match_length = mean(as.numeric(match_length), na.rm = TRUE),
+    median_match_length = median(as.numeric(match_length), na.rm = TRUE),
+    sd_match_length = sd(as.numeric(match_length), na.rm = TRUE),
+    n = n()
+  )
+print(alignment_summary)
+```
+
+```{r}
+# Scatter plot: alignment vs match_length
+ggplot(mudac_race_clean, aes(x = alignment, y = as.numeric(match_length))) +
+  geom_point(alpha = 0.5) +
+  geom_smooth(method = "lm", se = FALSE, color = "blue") +
+  labs(title = "Alignment vs Match Length", x = "Alignment", y = "Match Length") +
+  theme_minimal()
+
+# Boxplot: alignment vs match_length
+ggplot(mudac_race_clean, aes(x = factor(alignment), y = as.numeric(match_length))) +
+  geom_boxplot(fill = "lightblue") +
+  labs(title = "Boxplot of Match Length by Alignment", x = "Alignment", y = "Match Length") +
+  theme_minimal()
+```
+
+```{r}
+# Correlation analysis
+cor_test <- cor.test(mudac_race_clean$alignment, as.numeric(mudac_race_clean$match_length), use = "complete.obs")
+print(cor_test)
+```
+
+```{r}
+# Linear regression model: match_length as a function of alignment
+alignment_model <- lm(as.numeric(match_length) ~ alignment, data = mudac_race_clean)
+summary(alignment_model)
+
+# Visualize the regression
+ggplot(mudac_race_clean, aes(x = alignment, y = as.numeric(match_length))) +
+  geom_point(alpha = 0.5) +
+  geom_smooth(method = "lm", color = "red", se = TRUE) +
+  labs(
+    title = "Linear Regression: Match Length vs Alignment",
+    x = "Alignment (Explanatory Variable)",
+    y = "Match Length (Response Variable)"
+  ) +
+  theme_minimal()
+
+```
+
+```{r}
+# ANOVA to test differences in match_length across alignment levels
+anova_model <- aov(as.numeric(match_length) ~ factor(alignment), data = mudac_race_clean)
+summary(anova_model)
+
+# Boxplot to visualize differences
+ggplot(mudac_race_clean, aes(x = factor(alignment), y = as.numeric(match_length))) +
+  geom_boxplot(fill = "lightblue") +
+  labs(
+    title = "Boxplot of Match Length by Alignment Levels",
+    x = "Alignment (Explanatory Variable)",
+    y = "Match Length (Response Variable)"
+  ) +
+  theme_minimal()
+```
+
+
+
