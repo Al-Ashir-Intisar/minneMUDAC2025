@@ -1,0 +1,182 @@
+---
+title: "big_&_little_stats_cleaning"
+author: "Al Ashir Intisar"
+date: "2025-03-27"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# to read in .xlsx files
+library(readxl)
+library(tidyverse)
+# library for dataset summary functions
+library(skimr)
+#libarary for join functions
+library(dplyr)
+# library for writing/saving excel file
+library(openxlsx)
+# ggplot library for plots
+library(ggplot2)
+```
+
+
+```{r, warning=FALSE}
+# reading in the training data
+data <- read_excel("~/MUDAC/minneMUDAC2025/Data/Training.xlsx")
+
+```
+
+```{r}
+# only about 90+ Bigs have non NA valuee for this variable
+data %>% 
+  select(`Big ID`, `Big Car Access`) %>% 
+  filter(!is.na(`Big Car Access`)) %>% 
+  distinct(`Big ID`)
+
+```
+
+
+```{r}
+# creating a one hot encoded variablees (3) for this car access variable variable
+data_onehot <- data %>%
+  select(`Big Car Access`, `Big ID`) %>% 
+  distinct(`Big ID`, .keep_all = T) %>% 
+  mutate(
+    CarAccess_NA = ifelse(is.na(`Big Car Access`), 1, 0),
+    CarAccess_0_No = ifelse(`Big Car Access` %in% c("0", "No"), 1, 0),
+    CarAccess_Yes = ifelse(!is.na(`Big Car Access`) & `Big Car Access` == "Yes", 1, 0)
+  ) %>% 
+  select(!c(`Big Car Access`))
+
+# writing the cleaned variable into data folder
+#write.xlsx(data_onehot, "~/MUDAC/minneMUDAC2025/Data/unique_big_car_access_one_hot_encoded.xlsx")
+```
+
+```{r}
+clean_data_inti <- read_excel("~/MUDAC/minneMUDAC2025/Data/dates_df_with_is_not_NA_binary_variables_pca.xlsx")
+```
+
+
+```{r}
+# combining the one hot encoded car access variabble with clean date variables. 
+clean_data_inti <- left_join(clean_data_inti, data_onehot, by = join_by(`Big ID`))
+```
+
+
+```{r}
+# checking big contact marital status variable
+
+# only 1,227 unique bigs have non NA value for this variable
+
+data %>% 
+  select(`Big ID`, `Big Contact: Marital Status`) %>% 
+  distinct(`Big ID`, .keep_all = T) %>% 
+  #distinct(`Big Contact: Marital Status`)
+  filter(!is.na(`Big Contact: Marital Status`)) 
+
+```
+
+
+```{r}
+# creating one hot encoded variables for this big' marital status variable 
+data_onehot_marital <- data %>%
+  select(`Big ID`, `Big Contact: Marital Status`) %>%
+  distinct(`Big ID`, .keep_all = TRUE) %>%
+  mutate(
+    Marital_NA = ifelse(is.na(`Big Contact: Marital Status`), 1, 0),
+    Marital_Single = ifelse(!is.na(`Big Contact: Marital Status`) & `Big Contact: Marital Status` == "Single", 1, 0),
+    Marital_Married = ifelse(!is.na(`Big Contact: Marital Status`) & `Big Contact: Marital Status` == "Married", 1, 0),
+    Marital_Divorced = ifelse(!is.na(`Big Contact: Marital Status`) & `Big Contact: Marital Status` == "Divorced", 1, 0),
+    Marital_Other = ifelse(!is.na(`Big Contact: Marital Status`) & `Big Contact: Marital Status` == "Other", 1, 0),
+    Marital_LivingWithPartner = ifelse(!is.na(`Big Contact: Marital Status`) & `Big Contact: Marital Status` == "Living w/ Significant Other", 1, 0),
+    Marital_Separated = ifelse(!is.na(`Big Contact: Marital Status`) & `Big Contact: Marital Status` == "Separated", 1, 0),
+    Marital_DomesticPartner = ifelse(!is.na(`Big Contact: Marital Status`) & `Big Contact: Marital Status` == "Domestic Partner", 1, 0),
+    Marital_Widowed = ifelse(!is.na(`Big Contact: Marital Status`) & `Big Contact: Marital Status` == "Widowed", 1, 0)
+  ) %>% 
+  select(!c(`Big Contact: Marital Status`))
+
+# writing the cleeaned maritul status variables into the data folder
+#write.xlsx(data_onehot_marital, "~/MUDAC/minneMUDAC2025/Data/inti_other_stats_cleaned/unique_big_marital_status_one_hot_encoded.xlsx")
+```
+
+
+
+```{r}
+# combining the marital status df with all other
+
+clean_data_inti <- left_join(clean_data_inti, data_onehot_marital, by = join_by(`Big ID`))
+```
+
+
+
+```{r}
+# checking preferred communication type variable 
+data %>% 
+  select(`Big ID`, `Big Contact: Preferred Communication Type`) %>% 
+  filter(!is.na(`Big Contact: Preferred Communication Type`))
+```
+
+
+```{r}
+data %>% 
+  select(`Big ID`, `Big Open to Cross-Gender Match`) %>% 
+  filter(!is.na(`Big Open to Cross-Gender Match`))
+```
+
+
+
+```{r}
+# there are 1274 unique bigs with non na value for this variable. 
+data %>% 
+  select(`Big ID`, `Big Enrollment: Record Type`) %>% 
+  filter(!is.na(`Big Enrollment: Record Type`)) %>% 
+  distinct(`Big ID`, .keep_all = T) %>% 
+  distinct(`Big Enrollment: Record Type`)
+```
+
+
+```{r}
+# creating one hot encoded variables for this categorical variables including one for NA values. 
+data_onehot_enrollment <- data %>%
+  select(`Big ID`, `Big Enrollment: Record Type`) %>%
+  distinct(`Big ID`, .keep_all = TRUE) %>%
+  mutate(
+    Enroll_NA = ifelse(is.na(`Big Enrollment: Record Type`), 1, 0),
+    Enroll_CB = ifelse(!is.na(`Big Enrollment: Record Type`) & 
+                         `Big Enrollment: Record Type` == "CB Volunteer Enrollment", 1, 0),
+    Enroll_BSW = ifelse(!is.na(`Big Enrollment: Record Type`) & 
+                          `Big Enrollment: Record Type` == "BSW Volunteer Enrollment", 1, 0),
+    Enroll_CityWorks = ifelse(!is.na(`Big Enrollment: Record Type`) & 
+                                `Big Enrollment: Record Type` == "City Works Volunteer Enrollment", 1, 0),
+    Enroll_SBCollege = ifelse(!is.na(`Big Enrollment: Record Type`) & 
+                                `Big Enrollment: Record Type` == "SB College Volunteer Enrollment", 1, 0),
+    Enroll_SBAdult = ifelse(!is.na(`Big Enrollment: Record Type`) & 
+                              `Big Enrollment: Record Type` == "SB Adult Volunteer", 1, 0)
+  ) %>% 
+  select(!c(`Big Enrollment: Record Type`))
+
+
+# writing this one hot encoded variables to th data folder 
+#write.xlsx(data_onehot_enrollment, "~/MUDAC/minneMUDAC2025/Data/inti_other_stats_cleaned/unique_big_enrollment_type_one_hot_encoded.xlsx")
+```
+
+
+
+```{r}
+# joining to the full clean dataset 
+clean_data_inti <- left_join(clean_data_inti, data_onehot_enrollment, by = join_by(`Big ID`))
+
+# writing the full clean dataset to data folder 
+write.xlsx(clean_data_inti, "~/MUDAC/minneMUDAC2025/Data/inti_other_stats_cleaned/clean_data_inti.xlsx")
+```
+
+
+
+
+
+
+
