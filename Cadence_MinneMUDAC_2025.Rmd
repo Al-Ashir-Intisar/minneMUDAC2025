@@ -1,0 +1,90 @@
+---
+title: "Cadence_MinneMUDAC_2025"
+author: "Nhi"
+date: "2025-03-20"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+
+-------------------------------------------
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(ggthemes)
+library(dplyr)
+library(lubridate)
+```
+
+```{r}
+training_original <- read_csv("~/MinneMUDAC_2025/Training.xlsx - Sheet1.csv")
+```
+
+```{r}
+training_original <- rename_with(training_original, ~ tolower(gsub(" ", "_", .x, fixed = TRUE)))
+```
+
+```{r}
+# Look at relationship between cadence and match length
+cadence_match <- training_original |>
+  rename(matchid = match_id_18char,
+         act_date = match_activation_date,
+         close_date = match_closure_meeting_date) |>
+  select(matchid, completion_date, match_length) |>
+  mutate(completion_date = as.Date(completion_date)) |>
+  group_by(matchid) |>
+  arrange(ymd(completion_date)) |> 
+  mutate(cadence = as.numeric(completion_date - lag(completion_date)),
+         mean_cadence = mean(cadence, na.rm = T),
+         cadence = if_else(is.na(cadence), 0, cadence)) |>
+  ungroup() |>
+  select(mean_cadence, match_length, matchid) |>
+  distinct(matchid, mean_cadence, match_length) |>
+  drop_na(mean_cadence) |>
+  filter(mean_cadence != 0)
+```
+
+# Visualize
+```{r}
+cadence_match |>
+  ggplot(aes(log(mean_cadence), log(match_length))) +
+  geom_point(size = 0.5, alpha = 0.5) +
+  geom_smooth(method = lm, se = FALSE, formula = y ~ poly(x, 5)) 
+              
+```
+
+
+
+```{r}
+
+# model of log match_length and log mean cadence
+lm_cadence <- lm(match_length ~ mean_cadence, data = cadence_match) 
+summary(lm_cadence)
+
+#Polynomial model
+lm_cadence_poly <- lm(match_length ~ mean_cadence + I(mean_cadence^2) + I(mean_cadence^3) + I(mean_cadence^4), data = cadence_match)
+summary(lm_cadence_poly)
+
+#Transformation
+log_cadence <- lm(log(match_length) ~ poly(log(mean_cadence), 5), data = cadence_match)
+summary(log_cadence)
+
+anova(lm_cadence, lm_cadence_poly)
+```
+
+```{r}
+# Match length distribution
+training_original |>
+  ggplot(aes(match_length)) +
+  geom_histogram()
+
+mosaic::favstats(~match_length, data = training_original)
+```
+
