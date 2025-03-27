@@ -1,0 +1,119 @@
+---
+title: "mudac_race_alignment"
+author: "Fortress Okorie"
+output:
+  pdf_document: default
+  html_document: default
+editor_options:
+  chunk_output_type: console
+---
+
+```{r}
+#load necessary libraries 
+library(tidyverse)
+library(janitor) #for making column names syntactic
+
+#read in the csv file 
+mudac_data <- read_csv("~/Desktop/mudac/mudac_data.csv")
+
+#rename columns with syntactic names
+mudac_data <- mudac_data |>
+  rename_with(~ make_clean_names(.), everything())
+```
+
+
+```{r}
+mudac_race_clean <- mudac_data |>
+  select(match_id_18char, big_race_ethnicity, little_participant_race_ethnicity, match_length) |>
+  separate(big_race_ethnicity, into = c("big_race_1", "big_race_2", "big_race_3"), sep = ";", fill = "right") |>
+  separate(little_participant_race_ethnicity, into = c("little_race_1", "little_race_2", "little_race_3"), sep = ";", fill = "right") |>
+  mutate(across(everything(), as.character)) |>
+  rowwise() |>  # Ensures row-wise operation
+  mutate(
+    match_count = sum(c_across(starts_with("little_race")) %in% c_across(starts_with("big_race")), na.rm = TRUE),
+    alignment = case_when(
+      match_count == 3 ~ 1,           # All 3 little races match
+      match_count == 2 ~ 2 / 3,       # 2 little races match
+      match_count == 1 ~ 1 / 3,       # 1 little race matches
+      TRUE ~ 0                        # No match
+    )
+  ) |>
+  ungroup()
+```
+
+
+```{r}
+# Write the cleaned data to a new CSV file
+write_csv(mudac_race_clean, "~/Desktop/mudac/mudac_race_clean.csv")
+```
+
+```{r}
+# Summary statistics for match_length by alignment
+alignment_summary <- mudac_race_clean |>
+  group_by(alignment) |>
+  summarise(
+    mean_match_length = mean(as.numeric(match_length), na.rm = TRUE),
+    median_match_length = median(as.numeric(match_length), na.rm = TRUE),
+    sd_match_length = sd(as.numeric(match_length), na.rm = TRUE),
+    n = n()
+  )
+print(alignment_summary)
+```
+
+```{r}
+# Scatter plot: alignment vs match_length
+ggplot(mudac_race_clean, aes(x = alignment, y = as.numeric(match_length))) +
+  geom_point(alpha = 0.5) +
+  geom_smooth(method = "lm", se = FALSE, color = "blue") +
+  labs(title = "Alignment vs Match Length", x = "Alignment", y = "Match Length") +
+  theme_minimal()
+
+# Boxplot: alignment vs match_length
+ggplot(mudac_race_clean, aes(x = factor(alignment), y = as.numeric(match_length))) +
+  geom_boxplot(fill = "lightblue") +
+  labs(title = "Boxplot of Match Length by Alignment", x = "Alignment", y = "Match Length") +
+  theme_minimal()
+```
+
+```{r}
+# Correlation analysis
+cor_test <- cor.test(mudac_race_clean$alignment, as.numeric(mudac_race_clean$match_length), use = "complete.obs")
+print(cor_test)
+```
+
+```{r}
+# Linear regression model: match_length as a function of alignment
+alignment_model <- lm(as.numeric(match_length) ~ alignment, data = mudac_race_clean)
+summary(alignment_model)
+
+# Visualize the regression
+ggplot(mudac_race_clean, aes(x = alignment, y = as.numeric(match_length))) +
+  geom_point(alpha = 0.5) +
+  geom_smooth(method = "lm", color = "red", se = TRUE) +
+  labs(
+    title = "Linear Regression: Match Length vs Alignment",
+    x = "Alignment (Explanatory Variable)",
+    y = "Match Length (Response Variable)"
+  ) +
+  theme_minimal()
+
+```
+
+```{r}
+# ANOVA to test differences in match_length across alignment levels
+anova_model <- aov(as.numeric(match_length) ~ factor(alignment), data = mudac_race_clean)
+summary(anova_model)
+
+# Boxplot to visualize differences
+ggplot(mudac_race_clean, aes(x = factor(alignment), y = as.numeric(match_length))) +
+  geom_boxplot(fill = "lightblue") +
+  labs(
+    title = "Boxplot of Match Length by Alignment Levels",
+    x = "Alignment (Explanatory Variable)",
+    y = "Match Length (Response Variable)"
+  ) +
+  theme_minimal()
+```
+
+
+

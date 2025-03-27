@@ -1,0 +1,385 @@
+---
+title: "MinneMUDAC 2025 Keywords/ Sentiments"
+author: "Nhi Luong"
+date: "2025-03-11"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+----------------------------
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(ggthemes)
+library(dplyr)
+library(lubridate)
+library(tidytext)
+library(stringi)
+library(tm)
+
+```
+
+
+```{r}
+training_original <- read_csv("~/MinneMUDAC_2025/Training.xlsx - Sheet1.csv")
+```
+
+```{r}
+training_original <- rename_with(training_original, ~ tolower(gsub(" ", "_", .x, fixed = TRUE)))
+```
+
+```{r}
+training1 <- training_original |>
+  select(match_id_18char, completion_date, match_support_contact_notes, match_activation_date, match_closure_meeting_date, match_length)
+```
+
+
+## Explore Match Support Contact Notes
+Consider the Match Support Contact Notes open text field. 
+- Are there key words, phrases, or sentiments within this field that are related to Match Length? 
+- Do the key words, phrases, or sentiments differ between the early stages and late stages of a match?
+
+# Combine notes for each ID with Match Length included 
+
+```{r}
+
+combine_notes <- training_original |>
+  select(match_id_18char, match_length, match_support_contact_notes) |>
+  drop_na(match_id_18char, match_length) |>
+  group_by(match_id_18char, match_length) |>
+  summarise(all_notes = paste(match_support_contact_notes, collapse = " ")) |>
+  mutate(all_notes = str_to_lower(all_notes)) |>
+  mutate(all_notes = stri_replace_all_regex(all_notes,
+                                  pattern = c('activities:', 'question:', 'answer:', 
+                                  'child safety:', 'child development:', 
+                                  'relationship with bbbs:', 'parent/volunteer concerns:',
+                                  'child/volunteer relationship development:', 
+                                  'mss Notes',
+                                  'other comments-list progress/activities in school and in jj system:',':','l_first_name', 'b_first_name', 'bb', 'bs','lb','ls','n/a', 'mss notes'),
+                              replacement = " ",
+                                  vectorize=FALSE),
+         all_notes = str_replace_all(all_notes, "\\s+", " "), 
+         all_notes = str_trim(all_notes),
+         all_notes = gsub("([A-Z])", " \\1", all_notes))
+  
+```
+
+# Take a 10% random sample from the 3275 IDs' notes
+
+```{r}
+set.seed(34)
+sample_id <- sample(combine_notes$match_id_18char, size = 350) |> as_tibble()
+sample_id <- rename(sample_id, match_id_18char = value)
+
+sample_combine_notes <- combine_notes |> inner_join(sample_id)
+
+```
+
+# Unnest the notes to one word. Could also look at bigrams??
+
+```{r}
+
+sample_combine_words <- sample_combine_notes |>
+  unnest_tokens(output = word, input = all_notes, token = "words") 
+
+#stop_words
+
+```
+
+# Filter the "word" variable more. Take out any numeric values. Change to present tense verb.
+
+```{r}
+verbs <- read_csv("~/MinneMUDAC_2025/most-common-verbs-english.csv")
+
+verbs <- drop_na(verbs) |> rename(present = Word, singular = `3singular`, pre_participle = `Present Participle`, past = `Simple Past`, past_participle = `Past Participle`)
+
+
+clean_sample_words <- sample_combine_words |>
+  anti_join(stop_words) |>
+  filter(!grepl("\\d", word),
+         !grepl("\\_", word),
+         !grepl("\\'", word),
+         !grepl("\\.", word),
+         !word %in% c("email", "match", "mec", "has", "had", "have", "is", "am", "are", "was", "were", "be", "it", "of", "and", "in", "if", "this", "that", "at", "to", "rob", "big", "mc", "child")) |>
+   left_join(verbs, by = join_by(word == past), relationship = "many-to-many") |>
+  mutate(
+    word = case_when(
+      word %in% verbs$past ~ present,  # Convert past to present
+      word %in% verbs$singular ~ present, 
+      word %in% verbs$pre_participle ~ present,
+      word %in% verbs$past_participle ~ present,# Convert present to future
+      TRUE ~ word  # Keep unchanged if not found
+    )
+  ) %>%
+  select(word) |>
+  drop_na(word) 
+```
+
+# Explore clean sample words
+
+```{r}
+clean_sample_words |>
+  count(word, sort = T) |>
+  slice_max(n, n = 1, with_ties = F ) |>
+  left_join(match_length_tbl) |>
+  rename(count = n) |>
+  ggplot(aes(count, match_length)) +
+  geom_point()
+```
+
+
+# Get nrc sentiments 
+
+```{r}
+
+nrc_sentiments <- get_sentiments("nrc")
+
+nrc_words <- clean_sample_words |>
+  inner_join(nrc_sentiments, by = "word", relationship = "many-to-many") |>
+  add_count(word) |>
+  rename(count = n)
+
+```
+
+```{r}
+# Counts of nrc sentiment for each ID (Tibble)
+nrc_sentiments_350 <- nrc_words |> 
+  group_by(match_id_18char, sentiment) %>%
+  summarise(total = sum(count), .groups = "drop") %>%
+  pivot_wider(names_from = sentiment, values_from = total, values_fill = 0) %>%
+  mutate(net_sentiment = positive - negative) |>
+  left_join(match_length_tbl) |>
+  relocate(net_sentiment, .after = match_id_18char) |>
+  relocate(match_length, .before = net_sentiment)
+
+
+nrc_sentiments_count|>
+  ggplot(aes(anger, match_length)) +
+  geom_point() +
+  geom_smooth(method = lm, se = F, formula = y ~ poly(x, 6))
+
+nrc_words |>
+  group_by(word) |>
+  summarize(total = sum(count), .groups = "drop") |>
+  slice_max(total, n = 10)
+
+nrc_words |>
+  filter(sentiment %in% c("positive", "negative")) |>
+  group_by(sentiment, word) |>
+  summarize(total = sum(count), .groups = "drop") |>
+  slice_max(total, n = 10)
+```
+
+
+# Get afinn sentiments
+
+```{r}
+afinn_sentiments <- get_sentiments("afinn") # scale from -5 to 5
+
+afinn_words <- clean_sample_words |>
+  inner_join(afinn_sentiments, by = "word", relationship = "many-to-many") |>
+  add_count(word) |>
+  rename(count = n)
+
+afinn_words |>
+  group_by(match_id_18char, value) |>
+  summarise(total = sum(count), .groups = "drop") |>
+  pivot_wider(names_from = value, values_from = total, values_fill = 0) |>
+  left_join(match_length_tbl)
+
+
+# calculate overall sentiment in the support notes
+
+afinn_words |> 
+  group_by(match_id_18char) |> 
+  summarise(overall_sentiment = sum(value)) |>
+  left_join(match_length_tbl) |>
+  ggplot(aes(overall_sentiment, match_length)) +
+  geom_point()
+
+ 
+```
+
+# Get bing sentiments
+
+```{r}
+bing_sentiments <- get_sentiments("bing") # label negative and positive
+
+#Visualization
+clean_sample_words |>
+  inner_join(bing_sentiments, by = "word") |>
+  ungroup() |>
+  select(-match_id_18char) |>
+  count(sentiment, word, sort = T) %>%
+  filter(n >= 200) %>%
+  mutate(n = ifelse(sentiment == "negative", -n, n)) %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(aes(n, word, fill = sentiment)) +
+  geom_col() +
+  labs(x = "Contribution to sentiment", y = NULL)
+
+# bing sentiment words
+bing_words <- clean_sample_words |>
+  inner_join(bing_sentiments, by = "word", relationship = "many-to-many") |>
+  add_count(word) |>
+  rename(count = n)
+
+bing_words |>
+  group_by(match_id_18char, sentiment) %>%
+  summarise(total = sum(count), .groups = "drop") %>%
+  pivot_wider(names_from = sentiment, values_from = total, values_fill = 0) |>
+  mutate(net_sentiment = positive - negative) |>
+  left_join(match_length_tbl) |>
+  relocate(net_sentiment, .after = match_id_18char) |>
+  relocate(match_length, .after = net_sentiment)
+
+bing_words |>
+filter(sentiment %in% c("positive", "negative")) |>
+  group_by(sentiment) |>
+  summarize(total = sum(count), .groups = "drop") |>
+  slice_max(total, n = 20)
+```
+
+# Match length tbl
+
+```{r}
+match_length_tbl <- training1 |> select(match_id_18char, match_length) |> drop_na() |> distinct(match_id_18char, match_length)
+```
+
+# Explore bigrams (two words )
+
+```{r}
+sample_bigram <- sample_combine_notes |>
+  unnest_tokens(bigram, all_notes, token = "ngrams", n = 2) |>
+  filter(!is.na(bigram))
+
+sample_bigram |>
+  count(bigram)
+
+bigram_separated <- sample_bigram |>
+  separate(bigram, c("word1", "word2"), sep = " ")
+
+bigrams_filtered <- bigram_separated %>%
+  filter(!word1 %in% stop_words$word) %>%
+  filter(!word2 %in% stop_words$word)
+
+# new bigram counts:
+bigram_counts <- bigrams_filtered %>% 
+  count(word1, word2, sort = TRUE)
+
+# list of negation word
+negatiion_words <- c("no", "not", "never", "dont", "don't", "cannot", "can't", "won't", 
+    "wouldn't", "shouldn't", "aren't", "isn't", "wasn't", "weren't", "haven't", "hasn't", 
+    "hadn't", "doesn't", "didn't", "mightn't", "mustn't")
+
+not_words <- bigram_separated |>
+  filter(word1 %in% negatiion_words) |>
+  inner_join(afinn_sentiments, by = c(word2 = "word")) |>
+  count(word1, word2, value, sort = T)
+
+not_words |>
+  mutate(contribution = n * value) %>%
+  arrange(desc(abs(contribution))) %>%
+  head(100) %>%
+  #mutate(word2 = reorder(word2, contribution)) %>%
+  ggplot(aes(n * value, reorder(word2, contribution), fill = n * value > 0)) +
+  geom_col(show.legend = FALSE) +
+  labs(x = "Sentiment value * number of occurrences",
+       y = "Words preceded by \"not\"")
+```
+
+# Try bigger sample (500) to see if R can handle it
+
+```{r}
+sample_id_2 <- sample(combine_notes$match_id_18char, size = 500) |> as_tibble()
+sample_id_2 <- rename(sample_id_2, match_id_18char = value)
+
+sample2_combine_notes <- combine_notes |> inner_join(sample_id_2)
+```
+
+
+```{r}
+sample2_combine_words <- sample2_combine_notes |>
+  unnest_tokens(output = word, input = all_notes, token = "words") 
+
+```
+
+```{r}
+clean_sample2_words <- sample2_combine_words |>
+  anti_join(stop_words) |>
+  filter(!grepl("\\d", word),
+         !grepl("\\_", word),
+         !grepl("\\'", word),
+         !grepl("\\.", word),
+         !word %in% c("email", "match", "mec", "has", "had", "have", "is", "am", "are", "was", "were", "be", "it", "of", "and", "in", "if", "this", "that", "at", "to", "rob", "big", "mc", "child")) |>
+  select(word) |>
+  drop_na(word) 
+```
+
+```{r}
+nrc_words2 <- clean_sample2_words |>
+  inner_join(nrc_sentiments, by = "word", relationship = "many-to-many") |>
+  add_count(word) |>
+  rename(count = n)
+
+nrc_sentiments_500 <- nrc_words2 |> 
+  group_by(match_id_18char, sentiment) %>%
+  summarise(total = sum(count), .groups = "drop") %>%
+  pivot_wider(names_from = sentiment, values_from = total, values_fill = 0) %>%
+  mutate(net_sentiment = positive - negative) |>
+  left_join(match_length_tbl) |>
+  relocate(net_sentiment, .after = match_id_18char) |>
+  relocate(match_length, .before = net_sentiment)
+```
+
+
+#Make a function to do all the steps
+
+```{r}
+words_function <- function(notes, a, b) {
+  sub_notes <- combine_notes[a:b,]
+  sub_notes |> unnest_tokens(output = word, input = all_notes, token = "words") |>
+    anti_join(stop_words) |> 
+    filter(!grepl("\\d", word),
+         !grepl("\\_", word),
+         !grepl("\\'", word),
+         !grepl("\\.", word),
+         !word %in% c("email", "match", "mec", "has", "had", "have", "is", "am", "are", "was", "were", "be", "it", "of", "and", "in", "if", "this", "that", "at", "to", "rob", "big", "mc", "child")) |>
+    select(word) |>
+    drop_na(word) |>
+    inner_join(nrc_sentiments, by = "word", relationship = "many-to-many") |>
+    add_count(word) |>
+    rename(count = n) |>
+    group_by(match_id_18char, sentiment) |>
+    summarise(total = sum(count), .groups = "drop") |>
+    pivot_wider(names_from = sentiment, values_from = total, values_fill = 0) |>
+    mutate(net_sentiment = positive - negative) |>
+    left_join(match_length_tbl) |>
+    relocate(match_length, .after = match_id_18char) |>
+    relocate(net_sentiment, .after = match_length) |> 
+    relocate(positive, .after = net_sentiment) |>
+    relocate(negative, .after = positive)
+
+}
+```
+
+```{r}
+# I partitioned observations into 4 groups so R doesn't crash. 
+nrc_tbl_1 <- words_function(combine_notes, 1, 800)
+nrc_tbl_2 <- words_function(combine_notes, 801, 1600)
+nrc_tbl_3 <- words_function(combine_notes, 1601, 2401)
+nrc_tbl_4 <- words_function(combine_notes, 2401, 3275)
+
+big_sentiment_tbl <- bind_rows(nrc_tbl_1, nrc_tbl_2, nrc_tbl_3, nrc_tbl_4)
+```
+
+```{r}
+write.csv(big_sentiment_tbl , file = "Big Sentiment.csv")
+```
+
+
