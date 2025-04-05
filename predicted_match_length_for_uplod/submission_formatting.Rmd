@@ -1,0 +1,37 @@
+---
+title: "Submission formating"
+author: "Al Ashir Intisar"
+date: "2025-04-05"
+output: pdf_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+predicted_match_lengths_on_testing_data <- read_csv("MUDAC/minneMUDAC2025/predicted_match_length_for_uplod/predicted_match_lengths_on_testing_data.csv")
+```
+
+```{r}
+
+# Add RowID and YourTeamID columns
+predicted_match_lengths_on_testing_data$RowID <- seq_len(nrow(predicted_match_lengths_on_testing_data))
+predicted_match_lengths_on_testing_data$YourTeamID <- "U21"
+
+# Rename columns to match submission format
+colnames(predicted_match_lengths_on_testing_data) <- c("MatchIDChar", "PredictedMatchLength", "RowID", "YourTeamID")
+
+# Reorder columns as required
+submission_df <- predicted_match_lengths_on_testing_data[, c("RowID", "MatchIDChar", "PredictedMatchLength", "YourTeamID")]
+
+# View final structure
+head(submission_df)
+
+# Save to CSV
+write.csv(submission_df, "~/MUDAC/minneMUDAC2025/predicted_match_length_for_uplod/Testset_Predictions_Submit.csv", row.names = FALSE)
+
+```
+
