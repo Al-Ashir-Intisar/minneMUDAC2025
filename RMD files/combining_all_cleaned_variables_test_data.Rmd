@@ -1,0 +1,115 @@
+---
+title: "Combining all the variables"
+author: "Al Ashir Intisar"
+date: "2025-04-04"
+output: pdf_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# to read in .xlsx files
+library(readxl)
+library(tidyverse)
+# library for dataset summary functions
+library(skimr)
+#libarary for join functions
+library(dplyr)
+# library for writing/saving excel file
+library(openxlsx)
+# ggplot library for plots
+library(ggplot2)
+# library for creating dummy columns/one hot encoding
+library(fastDummies)
+```
+
+```{r}
+# reading in my combined data (Inti)
+dates_bigStats_date_variables_cleaned_test_df_Inti <- read_csv("~/MUDAC/minneMUDAC2025/test_data_files/dates_bigStats_date_variables_cleaned_test_df_Inti.csv")
+```
+
+```{r}
+# # reading in alignment successfull data 
+alignment_successful_testing_Anh <- read_csv("~/MUDAC/minneMUDAC2025/test_data_files/alignment_successful_testing_Anh.csv") %>% 
+  distinct(`Match ID 18Char`, .keep_all = T)
+# #not the cleaned data
+```
+
+```{r}
+# joimimg the datasets 
+complete_test_data_temp <- inner_join(dates_bigStats_date_variables_cleaned_test_df_Inti, alignment_successful_testing_Anh, by = join_by(`Match ID 18Char`))
+```
+
+
+
+```{r}
+# # reading in training cleaned data by Ahn
+Testing_cleaned_Anh <- read_csv("~/MUDAC/minneMUDAC2025/test_data_files/Testing_cleaned_Anh.csv") %>% 
+  select(!c(`Big County`, `Big State`, `Big Zip`, `Big: Military`, `Big Languages 1`, `Big Languages 2`, `Big Contact: Former Big/Little`, `Little County`, `Little State`, `Little Zip`)) %>% 
+  select(!1) %>% 
+  distinct(`Match ID 18Char`, .keep_all = T)
+# # not the cleaned data
+```
+
+
+```{r}
+complete_test_data_temp <- inner_join(complete_test_data_temp, Testing_cleaned_Anh, by = join_by(`Match ID 18Char`))
+```
+
+
+```{r}
+big_occupation_program_type_test_df_inti <- read_csv("MUDAC/minneMUDAC2025/test_data_files/big_occupation_program_type_test_df_inti.csv")
+```
+
+
+
+
+```{r}
+ # joining Kaashya's data 
+complete_test_data_temp <- inner_join(complete_test_data_temp, big_occupation_program_type_test_df_inti, by = join_by(`Match ID 18Char`)) 
+
+```
+
+
+```{r}
+# reading in nhi's cleaned data
+Test_Model_Sentiment_Nhi <- read_excel("~/MUDAC/minneMUDAC2025/test_data_files/Test Model Sentiment_Nhi.xlsx") 
+colnames(Test_Model_Sentiment_Nhi)[1] <- "Match ID 18Char"
+```
+
+
+```{r}
+#joining nhi's dataset
+complete_test_data_temp <- inner_join(complete_test_data_temp, Test_Model_Sentiment_Nhi, by = join_by(`Match ID 18Char`))
+```
+
+# have not completed this yet
+
+```{r}
+Test_Cadence_Match <- read_csv("MUDAC/minneMUDAC2025/test_data_files/Test Cadence Match.csv") %>%
+  select(`match_id_18char`, `mean_cadence`)
+
+colnames(Test_Cadence_Match) <- c("Match ID 18Char", "mean_cadence")
+```
+
+
+```{r}
+#joining nhi's dataset
+complete_test_data_temp <- inner_join(complete_test_data_temp, Test_Cadence_Match, by = join_by(`Match ID 18Char`))%>% 
+  distinct(`Match ID 18Char`, .keep_all = T)
+```
+
+
+```{r}
+#write_csv(complete_test_data_temp, "~/MUDAC/minneMUDAC2025/test_data_files/combined_complete_test_df.csv") 
+```
+
+
+```{r}
+complete_test_data_temp$Big
+```
+

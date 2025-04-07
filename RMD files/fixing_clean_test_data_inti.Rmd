@@ -1,0 +1,52 @@
+---
+title: "fixing the clean data inti"
+author: "Al Ashir Intisar"
+date: "2025-04-04"
+output: pdf_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+
+```
+
+
+
+```{r}
+dates_bigStats_date_variables_cleaned_test_df_Inti <- read_csv("~/MUDAC/minneMUDAC2025/test_data_files/dates_bigStats_date_variables_cleaned_test_df_Inti.csv") %>% 
+  select(!1:2) %>% 
+  select(!2:5) %>% 
+  distinct(`Match ID 18Char`, .keep_all = T)
+
+```
+
+
+```{r}
+# temp <- clean_data_inti %>% 
+#   select(!c(`ReEnroll_NA.y`, `ReEnroll_Yes.y`, `ReEnroll_No.y`, `is_not_NA_Days Match Activation to Note Completion`, `Days Match Activation to Note Completion`)) %>% 
+#   distinct(`Match ID 18Char`, .keep_all = T)
+# 
+# temp_avg_note_completion <- clean_data_inti %>% 
+#   select(`Match ID 18Char`, `Little ID`, `Big ID`, `Days Match Activation to Note Completion`) %>% 
+#   group_by(`Match ID 18Char`) %>% 
+#   summarise(`Days Match Activation to Note Completion avg` = mean(`Days Match Activation to Note Completion`)) %>% 
+#   filter(!is.na(`Days Match Activation to Note Completion avg`)) 
+#   
+# 
+# clean_data_inti <- left_join(temp, temp_avg_note_completion, by = join_by(`Match ID 18Char`))
+  
+```
+
+
+
+```{r}
+# writing the variable to the folder
+# write.csv(dates_bigStats_date_variables_cleaned_test_df_Inti, "~/MUDAC/minneMUDAC2025/test_data_files/dates_bigStats_date_variables_cleaned_test_df_Inti.csv")
+```
+

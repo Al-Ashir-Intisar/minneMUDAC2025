@@ -1,0 +1,121 @@
+---
+title: "Big Interest Stats"
+author: "Al Ashir Intisar"
+date: "2025-04-03"
+output: pdf_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# to read in .xlsx files
+library(readxl)
+library(tidyverse)
+# library for dataset summary functions
+library(skimr)
+#libarary for join functions
+library(dplyr)
+# library for writing/saving excel file
+library(openxlsx)
+# ggplot library for plots
+library(ggplot2)
+```
+
+
+```{r, warning=FALSE}
+# reading in the training data
+test_data <- read_excel("~/MUDAC/minneMUDAC2025/Data/Test_Truncated.xlsx")
+
+```
+
+```{r}
+dates_variables_cleaned_test_df <- read_csv("~/MUDAC/minneMUDAC2025/test_data_files/dates_variables_cleaned_test_df_Inti.csv")
+
+
+```
+
+
+
+
+```{r}
+# only 0 unique big has non na for this variable.
+test_data0 <- test_data %>% 
+  select(`Big ID`, `Big Contact: Interest Finder - Entertainment`) %>% 
+  filter(!is.na(`Big Contact: Interest Finder - Entertainment`)) %>% 
+  distinct(`Big ID`)
+```
+
+```{r}
+# creating a binary variable for NA and non na values for this variable. 
+
+big_interests_binary <- test_data %>% 
+  select(`Big ID`, `Big Contact: Interest Finder - Entertainment`) %>% 
+  distinct(`Big ID`, .keep_all = TRUE) %>% 
+  mutate(big_interests_isna = ifelse(is.na(`Big Contact: Interest Finder - Entertainment`), 0, 1)) %>% 
+  select(`Big ID`, big_interests_isna)
+
+```
+
+```{r}
+# joining the binary variable with clean data 
+
+dates_bigInterests_variables_cleaned_test_df <- left_join(dates_variables_cleaned_test_df, big_interests_binary, by = join_by(`Big ID`))
+
+
+# writing it to the data folcer
+#write.csv(dates_bigInterests_variables_cleaned_test_df, "~/MUDAC/minneMUDAC2025/test_data_files/dates_bigInterests_variables_cleaned_test_df_Inti.csv")
+
+```
+
+
+
+
+```{r}
+# only 0 unique big has non na for this variable.
+test_data1 <- test_data %>% 
+  select(`Big ID`, `Big Contact: Interest Finder - Hobbies`) %>% 
+  filter(!is.na(`Big Contact: Interest Finder - Hobbies`)) %>% 
+  distinct(`Big ID`)
+```
+
+
+
+```{r}
+# only 0 unique big has non na for this variable.
+test_data2 <- test_data %>% 
+  select(`Big ID`, `Big Contact: Interest Finder - Places To Go`) %>% 
+  filter(!is.na(`Big Contact: Interest Finder - Places To Go`)) %>% 
+  distinct(`Big ID`)
+```
+
+
+
+```{r}
+# only 0 unique big has non na for this variable.
+test_data3 <- test_data %>% 
+  select(`Big ID`, `Big Contact: Interest Finder - Sports`) %>% 
+  filter(!is.na(`Big Contact: Interest Finder - Sports`)) %>% 
+  distinct(`Big ID`)
+```
+
+
+```{r}
+intersect(test_data1$`Big ID`,test_data2$`Big ID`)
+intersect(test_data1$`Big ID`, test_data3$`Big ID`)
+intersect(test_data1$`Big ID`, test_data0$`Big ID`)
+```
+
+
+
+
+
+
+
+
+
+
+

@@ -31,7 +31,7 @@ submission_df <- predicted_match_lengths_on_testing_data[, c("RowID", "MatchIDCh
 head(submission_df)
 
 # Save to CSV
-write.csv(submission_df, "~/MUDAC/minneMUDAC2025/predicted_match_length_for_uplod/Testset_Predictions_Submit.csv", row.names = FALSE)
+#write.csv(submission_df, "~/MUDAC/minneMUDAC2025/predicted_match_length_for_uplod/Testset_Predictions_Submit.csv", row.names = FALSE)
 
 ```
 

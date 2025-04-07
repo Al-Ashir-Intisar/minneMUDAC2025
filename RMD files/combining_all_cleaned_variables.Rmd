@@ -1,0 +1,170 @@
+---
+title: "Combining all the variables"
+author: "Al Ashir Intisar"
+date: "2025-04-04"
+output: pdf_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# to read in .xlsx files
+library(readxl)
+library(tidyverse)
+# library for dataset summary functions
+library(skimr)
+#libarary for join functions
+library(dplyr)
+# library for writing/saving excel file
+library(openxlsx)
+# ggplot library for plots
+library(ggplot2)
+# library for creating dummy columns/one hot encoding
+library(fastDummies)
+```
+
+```{r}
+# reading in my combined data (Inti)
+clean_data_inti <- read_excel("~/MUDAC/minneMUDAC2025/Data/clean_data_inti.xlsx")
+```
+
+```{r}
+# # reading in alignment successfull data 
+alignment_successful_data_justpqa <- read_csv("~/MUDAC/minneMUDAC2025/alignment_successful.csv") %>% 
+  distinct(`Match ID 18Char`, .keep_all = T)
+# #not the cleaned data
+```
+
+```{r}
+# joimimg the datasets 
+complete_data_temp <- inner_join(clean_data_inti, alignment_successful_data_justpqa, by = join_by(`Match ID 18Char`))
+```
+
+
+
+```{r}
+# # reading in training cleaned data by Ahn
+training_cleaned_anh <- read_csv("~/MUDAC/minneMUDAC2025/Training_cleaned_Anh.csv") %>% 
+  select(!c(`Big County`, `Big State`, `Big Zip`, `Big: Military`, `Big Languages 1`, `Big Languages 2`, `Big Contact: Former Big/Little`, `Little County`, `Little State`, `Little Zip`)) %>% 
+  select(!1) %>% 
+  distinct(`Match ID 18Char`, .keep_all = T)
+# # not the cleaned data
+```
+
+
+```{r}
+complete_data_temp <- inner_join(complete_data_temp, training_cleaned_anh, by = join_by(`Match ID 18Char`))
+```
+
+
+
+```{r}
+# reading in Kaashya's cleaned variables
+mudac_clean_kaashya <- read_excel("~/MUDAC/minneMUDAC2025/MUDAC_clean.xlsx") %>% 
+  select(!c(`Big ID`, `Little ID`, `Big Birthdate`, `Big Race/Ethnicity`, `Little Contact: Language(s) Spoken`, `Match Length`, `Closure Reason`, `Big Employer`)) %>% 
+  mutate(big_occupation_category = case_when(
+    `Big Occupation` %in% c("Business", "Business: Human Resources", "Business: Marketing", "Business: Clerical",
+                            "Business: Sales", "Business: Mgt, Admin", "Business: Engineer", "Finance", "Finance: Banking",
+                            "Finance: Accountant", "Finance: Auditor", "Finance: Economist", "Finance: Tax/Preparer",
+                            "Consultant", "Self-Employed, Entrepreneur", "Insurance", "Real Estate: Realtor") ~ "Business & Finance",
+    
+    `Big Occupation` %in% c("Tech: Research/Design", "Tech: Computer/Programmer", "Tech: Sales, Mktg",
+                            "Tech: Engineer", "Tech: Management", "Tech: Support, Writing", "Tech: Production Line",
+                            "Engineer", "Scientist", "Architect") ~ "Technology & Engineering",
+    
+    `Big Occupation` %in% c("Medical", "Medical: Healthcare Worker", "Medical: Nurse", "Medical: Doctor, Provider",
+                            "Medical: Admin", "Medical: Pharmacist", "Personal Trainer/Coach") ~ "Medical & Health Services",
+    
+    `Big Occupation` %in% c("Govt", "Govt: Mgmt/Admin", "Govt: Clerical", "Govt: Technician",
+                            "Law", "Law: Lawyer", "Law: Judge", "Law: Paralegal", "Law: Police Officer", "Law: Security Officer",
+                            "Military", "Firefighter") ~ "Government, Law & Protective Services",
+    
+    `Big Occupation` %in% c("Education", "Education: Admin", "Education: Teacher", "Education: College Professor",
+                            "Education: Teacher Asst/Aid", "Student: College", "Student: High School", "Librarian") ~ "Education",
+    
+    `Big Occupation` %in% c("Human Services", "Human Services: Non-Profit", "Human Services: Social Worker",
+                            "Human Services: Youth Worker", "Human Services: Psychologist", "Child/Day Care Worker", "Clergy") ~ "Human & Social Services",
+    
+    `Big Occupation` %in% c("Arts, Entertainment, Sports", "Journalist/Media") ~ "Arts, Media & Entertainment",
+    
+    `Big Occupation` %in% c("Construction", "Facilities/Maintenance", "Laborer", "Factory Worker", "Craftsman",
+                            "Landscaper/Groundskeeper", "Barber/Hairstylist") ~ "Labor & Skilled Trades",
+    
+    `Big Occupation` %in% c("Retail: Mgt", "Retail: Sales", "Customer Service", "Service: Restaurant",
+                            "Service: Hotel", "Service: Tourism", "Transport: Flight Attendant", "Transport: Mechanic",
+                            "Transport: Driver", "Transport: Pilot") ~ "Retail, Service & Hospitality",
+    
+    `Big Occupation` %in% c("Agriculture", "Forestry") ~ "Agriculture & Natural Resources",
+    
+    `Big Occupation` %in% c("Unemployed", "Homemaker", "Retired", "Disabled", "Unknown") ~ "Not in Labor Force / Other",
+    
+    TRUE ~ "Other"
+  )) %>% 
+  select(!c(`Big Occupation`)) %>% 
+  dummy_cols(select_columns = "big_occupation_category", 
+             remove_first_dummy = F, 
+             remove_selected_columns = T) %>% 
+  dummy_cols(select_columns = "Program Type", 
+             remove_first_dummy = F, 
+             remove_selected_columns = T)
+  
+
+
+```
+
+
+```{r}
+# writing it to the folder 
+#write_csv(mudac_clean_kaashya, "~/MUDAC/minneMUDAC2025/mudac_clean_kaashya.csv")
+```
+
+
+
+
+```{r}
+ # joining Kaashya's data 
+complete_data_temp <- inner_join(complete_data_temp, mudac_clean_kaashya, by = join_by(`Match ID 18Char`)) 
+
+```
+
+
+```{r}
+# reading in nhi's cleaned data
+big_sentiment_nhi <- read.csv("~/MUDAC/minneMUDAC2025/Big Sentiment.csv") %>% 
+  select(!1)
+colnames(big_sentiment_nhi)[1] <- "Match ID 18Char"
+```
+
+
+```{r}
+#joining nhi's dataset
+complete_data_temp <- inner_join(complete_data_temp, big_sentiment_nhi, by = join_by(`Match ID 18Char`))
+```
+
+
+```{r}
+# read
+cadence_data_nhi <- read_csv("~/MUDAC/minneMUDAC2025/Cadence Match.csv") %>% 
+  select(`matchid`, `mean_cadence`)
+
+colnames(cadence_data_nhi) <- c("Match ID 18Char", "mean_cadence")
+
+# I will skip adding this variable because there are fewer matches in this df
+
+complete_data_temp <- inner_join(complete_data_temp, cadence_data_nhi, by = join_by(`Match ID 18Char`))
+```
+
+
+```{r}
+#write_csv(complete_data_temp, "~/MUDAC/minneMUDAC2025/combined_complete_df.csv")
+```
+
+
+```{r}
+#complete_data_temp$`Successful Match`
+```
+

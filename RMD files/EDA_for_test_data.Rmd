@@ -1,0 +1,130 @@
+---
+title: "EDA MinneMUDAC"
+author: "Al Ashir Intisar"
+date: "2025-03-13"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+
+```{r}
+# to read in .xlsx files
+library(readxl)
+```
+
+
+
+```{r}
+# reading in the test data
+data <- read_excel("~/MUDAC/minneMUDAC2025/Data/Test_Truncated.xlsx")
+
+# reading in the data disctionary 
+data_dictionary <- read_excel("~/MUDAC/minneMUDAC2025/Data/DataDictionary.xlsx")
+
+```
+
+```{r}
+# library for dataset summary functions
+library(skimr)
+#libarary for join functions
+library(dplyr)
+```
+
+
+```{r}
+# getting summary of all the variables without cleaning
+raw_data_summary <- skim(data)
+print(skim(data))
+```
+
+```{r}
+# merging the summary stats with data dictionary 
+data_dict_and_summary_test <- left_join(data_dictionary, raw_data_summary, by = join_by("Field Name" == "skim_variable"))
+```
+
+
+```{r}
+# library for writing/saving excel file
+library(openxlsx)
+```
+
+
+```{r}
+# saving the merged file for reference 
+#write.xlsx(data_dict_and_summary_test, "~/MUDAC/minneMUDAC2025/Data/DataDictionaryAndSummaryTestData.xlsx")
+```
+
+
+```{r}
+# ggplot library for plots
+library(ggplot2)
+```
+
+
+
+```{r}
+# frequency of match "Stage"
+data %>% 
+  select(Stage) %>% 
+  group_by(Stage) %>% 
+  summarise(count = n()) %>% 
+  ggplot()+
+  geom_bar(aes(x = Stage, y = count, fill = Stage), stat = "identity")+
+  labs(title = "Number of Matches in each stage in training dataset")
+  
+```
+
+
+```{r}
+# histogram of "Big Age"
+hist(data$`Big Age`, main = "Histogram of Big Age", col = "skyblue")
+```
+
+
+```{r}
+data$`Big Gender` %>% 
+  summarise()
+```
+
+
+
+```{r}
+library(tidyverse)
+```
+
+
+
+```{r}
+# need to 
+data %>% 
+  select("Little Other Interests", "Little ID") %>% 
+  drop_na() %>% 
+  distinct() 
+```
+
+
+```{r}
+data %>% 
+  select("Big Contact: Interest Finder - Entertainment", "Little ID") %>% 
+  drop_na() %>% 
+  distinct() 
+```
+
+
+```{r}
+# distribution of match length
+data %>% 
+  select(`Match Length`, `Match ID 18Char`) %>% 
+  distinct() %>%  # `unique()` works, but `distinct()` is preferred in dplyr
+  ggplot(aes(x = `Match Length`)) + 
+  geom_histogram(bins = 20, fill = "skyblue", color = "black") +
+  theme_minimal() +
+  labs(title = "Histogram of Match Length", x = "Match Length", y = "Count")
+```
+
+
+```{r}
+
+```
+

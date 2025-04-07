@@ -1,0 +1,689 @@
+---
+title: "EDA MinneMUDAC"
+author: "Al Ashir Intisar"
+date: "2025-03-13"
+output:
+  pdf_document: default
+  html_document: default
+editor_options:
+  chunk_output_type: console
+---
+
+
+```{r}
+# to read in .xlsx files
+library(readxl)
+library(tidyverse)
+# library for dataset summary functions
+library(skimr)
+#libarary for join functions
+library(dplyr)
+# library for writing/saving excel file
+library(openxlsx)
+# ggplot library for plots
+library(ggplot2)
+```
+
+```{r}
+combined_complete_df <- read_csv("MUDAC/minneMUDAC2025/combined_complete_df.csv")
+
+combined_complete_df$`Days Match Activation to Closure Meeting Date`
+```
+
+
+
+```{r, warning=FALSE}
+# reading in the training data
+test_data <- read_excel("~/MUDAC/minneMUDAC2025/Data/Test_Truncated.xlsx")
+
+```
+
+```{r}
+colnames(test_data)
+```
+
+
+
+```{r}
+# filtering in only date related variables. 
+date_variables_test_df <- test_data %>% 
+  select("Big ID", "Little ID", "Match ID 18Char", "Big Acceptance Date", "Big Approved Date", "Big Days Acceptance to Match", "Big Days Interview to Acceptance", "Big Days Interview to Match", "Big Enrollment: Created Date", "Completion Date", "Little Acceptance Date", "Little Application Received", "Little Birthdate", "Little Interview Date", "Little RTBM Date in MF", "Little RTBM in Matchforce", "Match Activation Date", "Big Re-Enroll")
+
+```
+
+
+```{r}
+# checking how many rows have big acceptance date in it
+count_big_acceptance_date <- date_variables_test_df %>% 
+  filter(!is.na(`Big Acceptance Date`)) %>% 
+  summarise(count = n())
+print(count_big_acceptance_date)
+```
+
+
+```{r}
+# Checking unique big ID to see how many unique bigs are there in the dataset
+count_big_id_unique <- date_variables_test_df %>% 
+  distinct(`Big ID`) %>% 
+  summarise(count = n())
+print(count_big_id_unique)
+```
+
+
+```{r}
+# Checking how many unique  Big ID has acceptance date
+count_big_unique_acceptance_date <- date_variables_test_df %>% 
+  filter(!is.na(`Big Acceptance Date`)) %>% 
+  distinct(`Big ID`, .keep_all = TRUE) %>%
+  summarise(count = n())
+
+print(count_big_unique_acceptance_date)
+```
+
+
+
+```{r}
+# Checking how many unique BIG re-enrolled
+unique_big_re_enroll <-date_variables_test_df %>% 
+  select("Big Re-Enroll", "Big ID") %>% 
+  filter(!is.na(`Big Re-Enroll`)) %>%
+  distinct(`Big ID`, .keep_all = TRUE) %>% 
+  group_by(`Big Re-Enroll`) %>% 
+  summarise(count = n())
+
+print(unique_big_re_enroll)
+```
+
+
+
+```{r}
+unique_big_acceptance_date <- date_variables_test_df %>% 
+  select("Big ID", "Big Acceptance Date") %>% 
+  filter(!is.na(`Big Acceptance Date`)) %>% 
+  distinct(`Big ID`, .keep_all = TRUE)
+  
+
+#write.xlsx(unique_big_acceptance_date, "~/MUDAC/minneMUDAC2025/Data/unique_big_acceptance_date.xlsx")
+```
+
+
+```{r}
+#data_big_acceptance_date_fixed <- left_join(data, unique_big_acceptance_date, by = join_by("Big ID"))
+```
+
+
+```{r}
+# data_big_acceptance_date_fixed %>% 
+#   filter(!is.na(`Big Acceptance Date.y`)) %>% 
+#   summarise(count = n())
+# 
+# sum(ifelse(is.na(data_big_acceptance_date_fixed[["Big Acceptance Date.x"]]) & 
+#            is.na(data_big_acceptance_date_fixed[["Big Acceptance Date.y"]]), 
+#            TRUE, 
+#            data_big_acceptance_date_fixed[["Big Acceptance Date.x"]] == 
+#            data_big_acceptance_date_fixed[["Big Acceptance Date.y"]]))
+
+  
+```
+
+**\textcolor{blue}{So all the bigs that do have acceptance dates does have acceptance date in the main dataset. no need to fill missing values from the existing values.}**
+
+
+```{r}
+# checking how many rows actually have no missing values. 
+test_data %>% 
+  na.omit()
+```
+
+***\textcolor{blue}{Since all rows hae at leat one na value we must fill out the missing values with some kind of values.}**
+
+
+
+```{r}
+# getting rid of Big Acceptance date column
+test_data <- test_data %>% 
+  select(!c("Big Acceptance Date"))
+```
+
+
+```{r}
+# checking the unique Big and non missing date assesment uploaded 
+count_big_assesment_uploaded_date <- test_data %>% 
+  filter(!is.na(`Big Assessment Uploaded`)) %>% 
+  summarise(count = n())
+print(count_big_assesment_uploaded_date)
+```
+
+
+```{r}
+# separating the unique bigs with non missing assesment uploded date. 
+unique_big_assesment_uploaded_date <- test_data %>% 
+  select("Big ID", "Big Assessment Uploaded") %>% 
+  filter(!is.na(`Big Assessment Uploaded`)) %>% 
+  distinct(`Big ID`, .keep_all = TRUE)
+
+#write.xlsx(unique_big_assesment_uploaded_date, "~/MUDAC/minneMUDAC2025/Data/unique_big_assesment_uploaded_date.xlsx")
+```
+
+
+```{r}
+test_data <- test_data %>%
+  mutate("Days Big Assesment Uploaded to Match" = as.numeric(difftime(`Match Activation Date`, `Big Assessment Uploaded`, units = "days")))
+```
+
+
+
+```{r}
+unique_big_days_assesment_uploaded_to_match_date <- test_data %>% 
+  select("Big ID", "Match ID 18Char", "Days Big Assesment Uploaded to Match") %>% 
+  filter(!is.na(`Days Big Assesment Uploaded to Match`)) %>% 
+  distinct(`Big ID`, `Match ID 18Char`, .keep_all = TRUE)
+
+
+#write.xlsx(unique_big_days_assesment_uploaded_to_match_date, "~/MUDAC/minneMUDAC2025/Data/unique_big_days_assesment_uploaded_to_match_date.xlsx")
+```
+
+
+```{r}
+# getting rid of the big assesment uploaded date column
+test_data <- test_data %>% 
+  select(!c("Big Assessment Uploaded"))
+```
+
+
+```{r}
+# checking the unique Big and non missing date assesment uploaded 
+count_big_contact_created_date <- test_data %>% 
+  filter(!is.na(`Big Contact: Created Date`)) %>% 
+  summarise(count = n())
+print(count_big_contact_created_date)
+```
+
+
+```{r}
+# separating the unique bigs with non missing contact created date. 
+unique_big_contact_created_date <- test_data %>% 
+  select("Big ID", "Big Contact: Created Date") %>% 
+  filter(!is.na(`Big Contact: Created Date`)) %>% 
+  distinct(`Big ID`, .keep_all = TRUE)
+
+#write.xlsx(unique_big_contact_created_date, "~/MUDAC/minneMUDAC2025/Data/unique_big_contact_created_date.xlsx")
+```
+
+
+
+```{r}
+# creating a variable for gig contact creatd to match in days. 
+
+test_data <- test_data %>%
+  mutate("Big Days Contact Created to Match" = as.numeric(difftime(`Match Activation Date`, `Big Contact: Created Date`, units = "days")))
+
+```
+
+
+```{r}
+# And getting rid of Big contact created column
+test_data <- test_data %>% 
+  select(!c("Big Contact: Created Date"))
+```
+
+
+```{r}
+# separating the unique mathc and bigs with non missing contact created to match activation date. 
+unique_big_days_contact_created_to_match_date <- test_data %>% 
+  select("Big ID", "Match ID 18Char", "Big Days Contact Created to Match") %>% 
+  filter(!is.na(`Big Days Contact Created to Match`)) %>% 
+  distinct(`Big ID`, `Match ID 18Char`, .keep_all = TRUE)
+
+#write.xlsx(unique_big_days_contact_created_to_match_date, "~/MUDAC/minneMUDAC2025/Data/unique_big_days_contact_created_to_match_date.xlsx")
+```
+
+
+```{r}
+# creating new variablr for unique mathc and big with big's enrollment to match activation
+test_data <- test_data %>%
+  mutate("Big Days Enrollment to Match" = as.numeric(difftime(`Match Activation Date`, `Big Enrollment: Created Date`, units = "days")))
+
+
+```
+
+
+```{r}
+# separating the unique match and bigs with non missing enrollment to match activation date. 
+unique_big_days_enrollment_to_match_date <- test_data %>% 
+  select("Big ID", "Match ID 18Char", "Big Days Enrollment to Match") %>% 
+  filter(!is.na(`Big Days Enrollment to Match`)) %>% 
+  distinct(`Big ID`, `Match ID 18Char`, .keep_all = TRUE)
+
+#write.xlsx(unique_big_days_enrollment_to_match_date, "~/MUDAC/minneMUDAC2025/Data/unique_big_days_enrollment_to_match_date.xlsx")
+```
+
+```{r}
+# getting rid of "Big Enrollment: Created Date" column 
+test_data <- test_data %>% 
+  select(!c(`Big Enrollment: Created Date`))
+```
+
+```{r}
+# creating new variable for unique match and big with big's approved date to match activation
+test_data <- test_data %>%
+  mutate("Big Days Approved to Match" = as.numeric(difftime(`Match Activation Date`, `Big Approved Date`, units = "days")))
+```
+
+
+
+```{r}
+unique_big_days_approved_to_match_date <- test_data %>% 
+  select("Big ID", "Match ID 18Char", "Big Days Approved to Match") %>% 
+  filter(!is.na(`Big Days Approved to Match`)) %>% 
+  distinct(`Big ID`, `Match ID 18Char`, .keep_all = TRUE)
+
+
+#write.xlsx(unique_big_days_approved_to_match_date, "~/MUDAC/minneMUDAC2025/Data/unique_big_days_approved_to_match_date.xlsx")
+```
+
+
+```{r}
+# getting rid of "Big Enrollment: Created Date" column 
+test_data <- test_data %>% 
+  select(!c(`Big Approved Date`))
+```
+
+
+
+
+```{r}
+unique_big_days_acceptance_to_match_date <- test_data %>% 
+  select("Big ID", "Match ID 18Char", "Big Days Acceptance to Match") %>% 
+  filter(!is.na(`Big Days Acceptance to Match`)) %>% 
+  distinct(`Big ID`, `Match ID 18Char`, .keep_all = TRUE)
+
+
+#write.xlsx(unique_big_days_acceptance_to_match_date, "~/MUDAC/minneMUDAC2025/Data/unique_big_days_acceptance_to_match_date.xlsx")
+```
+
+
+
+```{r}
+unique_big_days_interview_to_acceptance_date <- test_data %>% 
+  select("Big ID", "Match ID 18Char", "Big Days Interview to Acceptance") %>% 
+  filter(!is.na(`Big Days Interview to Acceptance`)) %>% 
+  distinct(`Big ID`, `Match ID 18Char`, .keep_all = TRUE)
+
+
+#write.xlsx(unique_big_days_interview_to_acceptance_date, "~/MUDAC/minneMUDAC2025/Data/unique_big_days_interview_to_acceptance_date.xlsx")
+```
+
+
+```{r}
+unique_big_days_interview_to_match_date <- test_data %>% 
+  select("Big ID", "Match ID 18Char", "Big Days Interview to Match") %>% 
+  filter(!is.na(`Big Days Interview to Match`)) %>% 
+  distinct(`Big ID`, `Match ID 18Char`, .keep_all = TRUE)
+
+
+#write.xlsx(unique_big_days_interview_to_match_date, "~/MUDAC/minneMUDAC2025/Data/unique_big_days_interview_to_match_date.xlsx")
+```
+
+
+```{r}
+# creating new variable for match activation date to completion in days
+# test_data <- test_data %>%
+#   mutate("Days Match Activation to Completion" = as.numeric(difftime(`Completion Date`, `Match Activation Date`, units = "days")))
+
+
+#data$`Days Match Activation to Completion`
+```
+
+
+
+```{r}
+# days_match_activation_to_note_completion <- test_data %>% 
+#   select("Completion Date", "Match ID 18Char", "Days Match Activation to Completion") %>% 
+#   filter(!is.na(`Days Match Activation to Completion`))
+
+
+#write.xlsx(days_match_activation_to_note_completion, "~/MUDAC/minneMUDAC2025/Data/days_match_activation_to_note_completion.xlsx")
+```
+
+
+```{r}
+# creating new variable for match activation date to completion in days
+test_data <- test_data %>%
+  mutate("Days Little Acceptance to Match Activation Date" = as.numeric(difftime(`Match Activation Date`,`Little Acceptance Date`, units = "days")))
+
+```
+
+
+```{r}
+unique_little_days_acceptance_to_match_activation <- test_data %>% 
+  select("Little ID", "Match ID 18Char", "Days Little Acceptance to Match Activation Date") %>% 
+  filter(!is.na(`Days Little Acceptance to Match Activation Date`)) %>% 
+  distinct(`Little ID`, `Match ID 18Char`, .keep_all = TRUE)
+
+
+#write.xlsx(unique_little_days_acceptance_to_match_activation, "~/MUDAC/minneMUDAC2025/Data/unique_little_days_acceptance_to_match_activation.xlsx")
+```
+
+
+```{r}
+# creating new variable for match activation date to completion in days
+test_data <- test_data %>%
+  mutate("Days Little Application Recieved to Match Activation Date" = as.numeric(difftime(`Match Activation Date`,`Little Application Received`, units = "days")))
+```
+
+
+
+```{r}
+unique_little_days_application_recieved_to_match_activation <- test_data %>% 
+  select("Little ID", "Match ID 18Char", "Days Little Application Recieved to Match Activation Date") %>% 
+  filter(!is.na(`Days Little Application Recieved to Match Activation Date`)) %>% 
+  distinct(`Little ID`, `Match ID 18Char`, .keep_all = TRUE)
+
+
+#write.xlsx(unique_little_days_application_recieved_to_match_activation, "~/MUDAC/minneMUDAC2025/Data/unique_little_days_application_recieved_to_match_activation.xlsx")
+```
+
+
+```{r}
+# creating new variable for match activation date to completion in days
+test_data <- test_data %>%
+  mutate("Days Little Interview to Match Activation Date" = as.numeric(difftime(`Match Activation Date`, `Little Interview Date`, units = "days")))
+```
+
+
+
+```{r}
+unique_little_days_interview_to_match_activation <- test_data %>% 
+  select("Little ID", "Match ID 18Char", "Days Little Interview to Match Activation Date") %>% 
+  filter(!is.na(`Days Little Interview to Match Activation Date`)) %>% 
+  distinct(`Little ID`, `Match ID 18Char`, .keep_all = TRUE)
+
+
+#write.xlsx(unique_little_days_interview_to_match_activation, "~/MUDAC/minneMUDAC2025/Data/unique_little_days_interview_to_match_activation.xlsx")
+```
+
+```{r}
+test_data %>% 
+  select(`Little Moved to RTBM in MF`) %>% 
+  filter(!is.na(`Little Moved to RTBM in MF`)) %>% 
+  head()
+```
+
+
+
+```{r}
+test_data %>% 
+  select(`Little RTBM Date in MF`) %>% 
+  filter(!is.na(`Little RTBM Date in MF`)) %>% 
+  head()
+```
+
+
+```{r}
+test_data %>% 
+  select(`Little RTBM in Matchforce`) %>% 
+  filter(!is.na(`Little RTBM in Matchforce`)) %>% 
+  arrange(desc(`Little RTBM in Matchforce`) ) %>% 
+  head()
+```
+
+```{r}
+unique_match_activation_date <- test_data %>% 
+  select("Match ID 18Char", "Match Activation Date") %>% 
+  filter(!is.na(`Match Activation Date`)) %>% 
+  distinct(`Match ID 18Char`, .keep_all = TRUE)
+
+#write.xlsx(unique_match_activation_date, "~/MUDAC/minneMUDAC2025/Data/unique_match_activation_date.xlsx")
+```
+
+
+
+```{r}
+# test_data <- test_data %>%
+#   mutate("Days Match Activation to Closure Meeting Date" = as.numeric(difftime(`Match Closure Meeting Date`, `Match Activation Date`, units = "days")))
+```
+
+
+```{r}
+# unique_days_match_activation_to_closure_date <- data %>% 
+#   select("Match ID 18Char", "Days Match Activation to Closure Meeting Date") %>% 
+#   filter(!is.na(`Days Match Activation to Closure Meeting Date`)) %>% 
+#   distinct(`Match ID 18Char`, .keep_all = TRUE)
+
+
+#write.xlsx(unique_days_match_activation_to_closure_date, "~/MUDAC/minneMUDAC2025/Data/unique_days_match_activation_to_closure_date.xlsx")
+```
+
+
+
+```{r}
+cleaned_date_test_data <- test_data %>% 
+  select(!c( `Little Interview Date`, `Little RTBM in Matchforce`, `Little RTBM Date in MF`, `Little Moved to RTBM in MF`, `Little Interview Date`, `Little Application Received`, `Little Acceptance Date`)) %>% 
+  select(`Match ID 18Char`, `Match Support Contact Notes`, `Little ID`, `Big ID`, `Match Activation Date`, `Big Days Acceptance to Match`, `Big Days Interview to Acceptance`, `Big Days Interview to Match`)
+```
+
+```{r}
+# # reordering the columns 
+# cleaned_date_test_data <- cleaned_date_test_data %>% 
+#   relocate(6, .before = 3) %>% 
+#   relocate(5, .before = 2) %>% 
+#   relocate(6, .before = 3)
+
+  
+```
+
+
+```{r}
+# Adding the match activation to completion in days variable
+# 
+# cleaned_date_test_data <- cleaned_date_test_data %>% 
+#     mutate("Days Match Activation to Note Completion" = as.numeric(difftime(`Completion Date`, `Match Activation Date`, units = "days")))
+  
+
+```
+
+
+```{r}
+# merging the big acceptange to match activation in days variable
+merge_test <- left_join(cleaned_date_test_data, unique_big_days_approved_to_match_date, by = join_by(`Match ID 18Char`, `Big ID`))
+```
+
+
+
+```{r}
+cleaned_date_test_data <- merge_test
+```
+
+
+```{r}
+# merging the big acceptange to match activation in days variable
+merge_test <- left_join(cleaned_date_test_data, unique_big_days_assesment_uploaded_to_match_date, by = join_by(`Match ID 18Char`, `Big ID`))
+```
+
+```{r}
+cleaned_date_test_data <- merge_test
+```
+
+
+```{r}
+# merging the big acceptange to match activation in days variable
+merge_test <- left_join(cleaned_date_test_data, unique_big_days_contact_created_to_match_date, by = join_by(`Match ID 18Char`, `Big ID`))
+```
+
+```{r}
+cleaned_date_test_data <- merge_test
+```
+
+
+```{r}
+# merging the big acceptange to match activation in days variable
+merge_test <- left_join(cleaned_date_test_data, unique_big_days_enrollment_to_match_date, by = join_by(`Match ID 18Char`, `Big ID`))
+```
+
+```{r}
+cleaned_date_test_data <- merge_test
+```
+
+
+```{r}
+# # merging the big acceptange to match activation in days variable
+# merge_test <- left_join(cleaned_date_test_data, unique_days_match_activation_to_closure_date, by = join_by(`Match ID 18Char`))
+```
+
+```{r}
+# cleaned_date_test_data <- merge_test
+```
+
+
+```{r}
+# merging the big acceptange to match activation in days variable
+merge_test <- left_join(cleaned_date_test_data, unique_little_days_acceptance_to_match_activation, by = join_by(`Match ID 18Char`, `Little ID`))
+```
+
+```{r}
+cleaned_date_test_data <- merge_test
+```
+
+```{r}
+# merging the big acceptange to match activation in days variable
+merge_test <- left_join(cleaned_date_test_data, unique_little_days_application_recieved_to_match_activation, by = join_by(`Match ID 18Char`, `Little ID`))
+```
+
+```{r}
+cleaned_date_test_data <- merge_test
+```
+
+```{r}
+# merging the big acceptange to match activation in days variable
+merge_test <- left_join(cleaned_date_test_data, unique_little_days_interview_to_match_activation, by = join_by(`Match ID 18Char`, `Little ID`))
+```
+
+```{r}
+cleaned_date_test_data <- merge_test
+```
+
+
+```{r}
+
+```
+
+
+
+```{r}
+#write.xlsx(cleaned_date_test_data, "~/MUDAC/minneMUDAC2025/Data/all_date_variables_cleaned_test_df.xlsx")
+```
+
+
+# This is the pca part
+
+```{r}
+library(readxl)
+library(dplyr)
+library(tidyverse)
+library(factoextra)
+library(openxlsx)
+```
+
+
+```{r}
+cleaned_date_test_data <- read_excel("~/MUDAC/minneMUDAC2025/Data/all_date_variables_cleaned_test_df.xlsx")
+```
+
+
+```{r}
+dates_df_with_is_not_NA_binary_variables <- cleaned_date_test_data %>%
+  mutate(across(6:ncol(.), ~ ifelse(is.na(.), 0, 1), .names = "is_not_NA_{.col}"))
+
+```
+
+
+
+```{r}
+dates_df_with_is_not_NA_binary_variables %>% 
+  drop_na() %>% 
+  distinct(`Match ID 18Char`, .keep_all = TRUE)
+
+# So only about 0 m,athces that has all non NA values for the date variables. 
+```
+
+
+```{r}
+print(sum(dates_df_with_is_not_NA_binary_variables$`Big Days Acceptance to Match` == 0, na.rm = TRUE))
+print(sum(dates_df_with_is_not_NA_binary_variables$`Big Days Interview to Acceptance` == 0, na.rm = TRUE))
+print(sum(dates_df_with_is_not_NA_binary_variables$`Big Days Interview to Match` == 0, na.rm = TRUE))
+print(sum(dates_df_with_is_not_NA_binary_variables$`Big Days Approved to Match` == 0, na.rm = TRUE))
+print(sum(dates_df_with_is_not_NA_binary_variables$`Days Big Assesment Uploaded to Match` == 0, na.rm = TRUE))
+print(sum(dates_df_with_is_not_NA_binary_variables$`Big Days Contact Created to Match` == 0, na.rm = TRUE))
+print(sum(dates_df_with_is_not_NA_binary_variables$`Big Days Enrollment to Match` == 0, na.rm = TRUE))
+print(sum(dates_df_with_is_not_NA_binary_variables$`Days Little Acceptance to Match Activation Date` == 0, na.rm = TRUE))
+print(sum(dates_df_with_is_not_NA_binary_variables$`Days Little Application Recieved to Match Activation Date` == 0, na.rm = TRUE))
+print(sum(dates_df_with_is_not_NA_binary_variables$`Days Little Interview to Match Activation Date` == 0, na.rm = TRUE))
+
+
+```
+
+```{r}
+# df_for_pca_with_is_not_NA_variables <- clean_date_df %>%
+#   select(6:ncol(clean_date_df)) %>% 
+#   mutate(across(everything(), ~ ifelse(is.na(.), 0, 1), .names = "is_not_NA_{.col}")) %>% 
+#   select(13:24)
+# 
+# # View the first few rows to verify
+# head(df_for_pca_with_is_not_NA_variables)
+```
+
+
+```{r}
+# pca_with_is_NA_variables <- prcomp(df_for_pca_with_is_not_NA_variables)
+# 
+# fviz_pca_biplot(pca_with_is_NA_variables)
+# 
+# # plotting how much of the variation each pc explains
+# fviz_screeplot(pca_with_is_NA_variables, addlabels = TRUE, ylim = c(0, 100))+
+# labs(title = "Date is NA variables pca scree plot")
+```
+
+
+```{r}
+
+#dates_df_with_is_not_NA_binary_variables_pca <- cbind(dates_df_with_is_not_NA_binary_variables, pca_with_is_NA_variables$x)
+
+# first 5 PC explains 100% of the variability
+
+#write.xlsx(dates_df_with_is_not_NA_binary_variables_pca, "~/MUDAC/minneMUDAC2025/Data/dates_df_with_is_not_NA_binary_variables_pca.xlsx")
+```
+
+
+
+```{r}
+dates_df_with_is_not_NA_binary_variables_0s_for_NA <- dates_df_with_is_not_NA_binary_variables %>%
+  mutate(across(6:ncol(.), ~ replace(., is.na(.), 0)))
+
+```
+
+
+```{r}
+dates_df_with_is_not_NA_binary_variables_0s_for_NA %>% 
+  select(!2:5) %>% 
+  drop_na() %>% 
+  distinct(`Match ID 18Char`, .keep_all = T)
+```
+
+
+```{r}
+#write_csv(dates_df_with_is_not_NA_binary_variables_0s_for_NA, "~/MUDAC/minneMUDAC2025/test_data_files/dates_variables_cleaned_test_df.csv")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+

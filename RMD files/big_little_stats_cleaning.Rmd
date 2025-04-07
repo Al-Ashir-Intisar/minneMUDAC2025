@@ -3,6 +3,8 @@ title: "big_&_little_stats_cleaning"
 author: "Al Ashir Intisar"
 date: "2025-03-27"
 output: pdf_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
@@ -25,14 +27,14 @@ library(ggplot2)
 
 
 ```{r, warning=FALSE}
-# reading in the training data
-data <- read_excel("~/MUDAC/minneMUDAC2025/Data/Training.xlsx")
+# reading in the test data
+test_data <- read_excel("~/MUDAC/minneMUDAC2025/Data/Test_Truncated.xlsx")
 
 ```
 
 ```{r}
-# only about 90+ Bigs have non NA valuee for this variable
-data %>% 
+# only about 18 Bigs have non NA valuee for this variable
+test_data %>% 
   select(`Big ID`, `Big Car Access`) %>% 
   filter(!is.na(`Big Car Access`)) %>% 
   distinct(`Big ID`)
@@ -41,8 +43,8 @@ data %>%
 
 
 ```{r}
-# creating a one hot encoded variablees (3) for this car access variable variable
-data_onehot <- data %>%
+# creating a one hot encoded variables (3) for this car access variable variable
+data_onehot <- test_data %>%
   select(`Big Car Access`, `Big ID`) %>% 
   distinct(`Big ID`, .keep_all = T) %>% 
   mutate(
@@ -57,22 +59,22 @@ data_onehot <- data %>%
 ```
 
 ```{r}
-clean_data_inti <- read_excel("~/MUDAC/minneMUDAC2025/Data/dates_df_with_is_not_NA_binary_variables_pca.xlsx")
+dates_bigInterests_variables_cleaned_test_df <- read_csv("~/MUDAC/minneMUDAC2025/test_data_files/dates_bigInterests_variables_cleaned_test_df_Inti.csv")
 ```
 
 
 ```{r}
 # combining the one hot encoded car access variabble with clean date variables. 
-clean_data_inti <- left_join(clean_data_inti, data_onehot, by = join_by(`Big ID`))
+dates_bigStats_date_variables_cleaned_test_df <- left_join(dates_bigInterests_variables_cleaned_test_df, data_onehot, by = join_by(`Big ID`))
 ```
 
 
 ```{r}
 # checking big contact marital status variable
 
-# only 1,227 unique bigs have non NA value for this variable
+# only 83 unique bigs have non NA value for this variable
 
-data %>% 
+test_data %>% 
   select(`Big ID`, `Big Contact: Marital Status`) %>% 
   distinct(`Big ID`, .keep_all = T) %>% 
   #distinct(`Big Contact: Marital Status`)
@@ -83,7 +85,7 @@ data %>%
 
 ```{r}
 # creating one hot encoded variables for this big' marital status variable 
-data_onehot_marital <- data %>%
+data_onehot_marital <- test_data %>%
   select(`Big ID`, `Big Contact: Marital Status`) %>%
   distinct(`Big ID`, .keep_all = TRUE) %>%
   mutate(
@@ -108,21 +110,21 @@ data_onehot_marital <- data %>%
 ```{r}
 # combining the marital status df with all other
 
-clean_data_inti <- left_join(clean_data_inti, data_onehot_marital, by = join_by(`Big ID`))
+dates_bigStats_date_variables_cleaned_test_df <- left_join(dates_bigStats_date_variables_cleaned_test_df, data_onehot_marital, by = join_by(`Big ID`))
 ```
 
 
 
 ```{r}
 # checking preferred communication type variable 
-data %>% 
+test_data %>% 
   select(`Big ID`, `Big Contact: Preferred Communication Type`) %>% 
   filter(!is.na(`Big Contact: Preferred Communication Type`))
 ```
 
 
 ```{r}
-data %>% 
+test_data %>% 
   select(`Big ID`, `Big Open to Cross-Gender Match`) %>% 
   filter(!is.na(`Big Open to Cross-Gender Match`))
 ```
@@ -131,7 +133,7 @@ data %>%
 
 ```{r}
 # there are 1274 unique bigs with non na value for this variable. 
-data %>% 
+test_data %>% 
   select(`Big ID`, `Big Enrollment: Record Type`) %>% 
   filter(!is.na(`Big Enrollment: Record Type`)) %>% 
   distinct(`Big ID`, .keep_all = T) %>% 
@@ -141,7 +143,7 @@ data %>%
 
 ```{r}
 # creating one hot encoded variables for this categorical variables including one for NA values. 
-data_onehot_enrollment <- data %>%
+data_onehot_enrollment <- test_data %>%
   select(`Big ID`, `Big Enrollment: Record Type`) %>%
   distinct(`Big ID`, .keep_all = TRUE) %>%
   mutate(
@@ -168,12 +170,62 @@ data_onehot_enrollment <- data %>%
 
 ```{r}
 # joining to the full clean dataset 
-clean_data_inti <- left_join(clean_data_inti, data_onehot_enrollment, by = join_by(`Big ID`))
+dates_bigStats_date_variables_cleaned_test_df <- left_join(dates_bigStats_date_variables_cleaned_test_df, data_onehot_enrollment, by = join_by(`Big ID`))
 
 # writing the full clean dataset to data folder 
-write.xlsx(clean_data_inti, "~/MUDAC/minneMUDAC2025/Data/inti_other_stats_cleaned/clean_data_inti.xlsx")
+#write.xlsx(clean_data_inti, "~/MUDAC/minneMUDAC2025/Data/clean_data_inti.xlsx")
 ```
 
+
+
+```{r}
+# checking the Big Re-Enroll variables 
+# 90 unique big has non na value for this variable
+
+test_data %>% 
+  select(`Big ID`, `Big Re-Enroll`) %>% 
+  distinct(`Big ID`, .keep_all = T) %>% 
+  filter(!is.na(`Big Re-Enroll`))
+```
+
+
+```{r}
+# creating one hot encoded variable for reenroll variable
+data_onehot_ReEnrollment <- test_data %>%
+  select(`Big ID`, `Big Re-Enroll`) %>%
+  distinct(`Big ID`, .keep_all = TRUE) %>%
+  mutate(
+    ReEnroll_NA = ifelse(is.na(`Big Re-Enroll`), 1, 0),
+    ReEnroll_Yes = ifelse(!is.na(`Big Re-Enroll`) & 
+                         `Big Re-Enroll` == 1, 1, 0),
+    ReEnroll_No = ifelse(!is.na(`Big Re-Enroll`) & 
+                          `Big Re-Enroll` == 0, 1, 0)
+  ) %>% 
+  select(!c(`Big Re-Enroll`))
+
+
+# writing the data to data folder 
+#write.xlsx(data_onehot_ReEnrollment, "~/MUDAC/minneMUDAC2025/Data/inti_other_stats_cleaned/unique_big_reenroll_one_hot_encoded.xlsx")
+```
+
+```{r}
+# joining to the full clean dataset 
+dates_bigStats_date_variables_cleaned_test_df <- left_join(dates_bigStats_date_variables_cleaned_test_df, data_onehot_ReEnrollment, by = join_by(`Big ID`))
+
+
+
+#write.csv(dates_bigStats_date_variables_cleaned_test_df, "~/MUDAC/minneMUDAC2025/test_data_files/dates_bigStats_date_variables_cleaned_test_df_Inti.csv")
+```
+
+
+
+
+
+
+
+```{r}
+
+```
 
 
 

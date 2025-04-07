@@ -1,0 +1,86 @@
+---
+title: "EDA MinneMUDAC"
+author: "Al Ashir Intisar"
+date: "2025-03-13"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+
+```{r}
+# to read in .xlsx files
+library(readxl)
+# library for dataset summary functions
+library(skimr)
+#libarary for join functions
+library(dplyr)
+```
+
+
+
+```{r}
+# reading in the test data
+test_data <- read_excel("~/MUDAC/minneMUDAC2025/Data/Test_Truncated.xlsx") %>% 
+  select(`Match ID 18Char`, `Big Occupation`, `Program Type`)
+
+```
+
+
+
+
+```{r}
+# reading in Kaashya's cleaned variables
+big_occupation_program_type <- test_data %>% 
+  mutate(big_occupation_category = case_when(
+    `Big Occupation` %in% c("Business", "Business: Human Resources", "Business: Marketing", "Business: Clerical",
+                            "Business: Sales", "Business: Mgt, Admin", "Business: Engineer", "Finance", "Finance: Banking",
+                            "Finance: Accountant", "Finance: Auditor", "Finance: Economist", "Finance: Tax/Preparer",
+                            "Consultant", "Self-Employed, Entrepreneur", "Insurance", "Real Estate: Realtor") ~ "Business & Finance",
+    
+    `Big Occupation` %in% c("Tech: Research/Design", "Tech: Computer/Programmer", "Tech: Sales, Mktg",
+                            "Tech: Engineer", "Tech: Management", "Tech: Support, Writing", "Tech: Production Line",
+                            "Engineer", "Scientist", "Architect") ~ "Technology & Engineering",
+    
+    `Big Occupation` %in% c("Medical", "Medical: Healthcare Worker", "Medical: Nurse", "Medical: Doctor, Provider",
+                            "Medical: Admin", "Medical: Pharmacist", "Personal Trainer/Coach") ~ "Medical & Health Services",
+    
+    `Big Occupation` %in% c("Govt", "Govt: Mgmt/Admin", "Govt: Clerical", "Govt: Technician",
+                            "Law", "Law: Lawyer", "Law: Judge", "Law: Paralegal", "Law: Police Officer", "Law: Security Officer",
+                            "Military", "Firefighter") ~ "Government, Law & Protective Services",
+    
+    `Big Occupation` %in% c("Education", "Education: Admin", "Education: Teacher", "Education: College Professor",
+                            "Education: Teacher Asst/Aid", "Student: College", "Student: High School", "Librarian") ~ "Education",
+    
+    `Big Occupation` %in% c("Human Services", "Human Services: Non-Profit", "Human Services: Social Worker",
+                            "Human Services: Youth Worker", "Human Services: Psychologist", "Child/Day Care Worker", "Clergy") ~ "Human & Social Services",
+    
+    `Big Occupation` %in% c("Arts, Entertainment, Sports", "Journalist/Media") ~ "Arts, Media & Entertainment",
+    
+    `Big Occupation` %in% c("Construction", "Facilities/Maintenance", "Laborer", "Factory Worker", "Craftsman",
+                            "Landscaper/Groundskeeper", "Barber/Hairstylist") ~ "Labor & Skilled Trades",
+    
+    `Big Occupation` %in% c("Retail: Mgt", "Retail: Sales", "Customer Service", "Service: Restaurant",
+                            "Service: Hotel", "Service: Tourism", "Transport: Flight Attendant", "Transport: Mechanic",
+                            "Transport: Driver", "Transport: Pilot") ~ "Retail, Service & Hospitality",
+    
+    `Big Occupation` %in% c("Agriculture", "Forestry") ~ "Agriculture & Natural Resources",
+    
+    `Big Occupation` %in% c("Unemployed", "Homemaker", "Retired", "Disabled", "Unknown") ~ "Not in Labor Force / Other",
+    
+    TRUE ~ "Other"
+  )) %>% 
+  select(!c(`Big Occupation`)) %>% 
+  dummy_cols(select_columns = "big_occupation_category", 
+             remove_first_dummy = F, 
+             remove_selected_columns = T) %>% 
+  dummy_cols(select_columns = "Program Type", 
+             remove_first_dummy = F, 
+             remove_selected_columns = T)
+```
+
+```{r}
+#write_csv(big_occupation_program_type, "~/MUDAC/minneMUDAC2025/test_data_files/big_occupation_program_type_test_df_inti.csv")
+```
+
+
